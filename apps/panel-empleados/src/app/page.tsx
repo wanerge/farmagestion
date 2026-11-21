@@ -13,6 +13,7 @@ import {
 import {
   esAdmin,
   esDomiciliario,
+  puedeArmarRutas,
   puedeGestionarPedidosYTurnos,
 } from "@/lib/auth/permisos";
 import {
@@ -127,15 +128,19 @@ function TableroContenido() {
             Hola, {usuario?.nombres ?? "domiciliario"}
           </h1>
           <p className="mt-2 max-w-2xl text-sm text-slate-600">
-            Tu perfil tiene acceso exclusivo a tus rutas de entrega asignadas
-            (&ldquo;Mi ruta&rdquo;) y a tus notificaciones internas. El módulo de
-            gestión de domicilios y rutas se habilita en la siguiente fase
-            operativa.
+            Consulta tus rutas asignadas para hoy en el mapa, revisa el orden de
+            las paradas y registra cada entrega o intento fallido.
           </p>
           <div className="mt-5 flex flex-wrap gap-3">
             <Link
-              href="/notificaciones"
+              href="/mi-ruta"
               className="rounded-lg bg-emerald-700 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-800"
+            >
+              Ir a Mi ruta
+            </Link>
+            <Link
+              href="/notificaciones"
+              className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
             >
               Ver mis notificaciones
             </Link>
@@ -233,9 +238,19 @@ function TableroContenido() {
         </div>
 
         <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-            Domicilios del día
-          </p>
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+              Domicilios del día
+            </p>
+            {puedeArmarRutas(usuario) && (
+              <Link
+                href="/domicilios"
+                className="text-xs font-semibold text-emerald-700 hover:underline"
+              >
+                Rutas →
+              </Link>
+            )}
+          </div>
           <p className="mt-2 text-3xl font-bold text-slate-900">
             {resumen ? resumen.domiciliosHoy : "—"}
           </p>

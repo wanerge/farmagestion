@@ -6,6 +6,8 @@ import { useState } from "react";
 import {
   esAdmin,
   etiquetaRolUsuario,
+  puedeArmarRutas,
+  puedeEjecutarRutas,
   puedeGestionarPedidosYTurnos,
   puedeVerInventario,
 } from "@/lib/auth/permisos";
@@ -40,6 +42,12 @@ export function PanelShell({ children }: { children: React.ReactNode }) {
   if (puedeGestionarPedidosYTurnos(usuario)) {
     navItems.push({ href: "/pedidos", label: "Pedidos" });
     navItems.push({ href: "/turnos", label: "Turnos" });
+  }
+  if (puedeArmarRutas(usuario)) {
+    navItems.push({ href: "/domicilios", label: "Domicilios" });
+  }
+  if (puedeEjecutarRutas(usuario)) {
+    navItems.push({ href: "/mi-ruta", label: "Mi ruta" });
   }
   navItems.push({
     href: "/notificaciones",

@@ -10,7 +10,9 @@ import { ApiError, isApiError } from "../api/problem";
 import {
   calcularAccionesPedido,
   esPersonalAutorizado,
+  puedeArmarRutas,
   puedeEditarInventario,
+  puedeEjecutarRutas,
   puedeGestionarPedidosYTurnos,
   puedeVerInventario,
 } from "../auth/permisos";
@@ -91,6 +93,17 @@ describe("Panel de empleados · Reglas de roles, cliente tipado y errores proble
     expect(puedeGestionarPedidosYTurnos(FARMACEUTICO)).toBe(true);
     expect(puedeGestionarPedidosYTurnos(DOMICILIARIO)).toBe(false);
     expect(puedeGestionarPedidosYTurnos(ADMIN)).toBe(true);
+
+    // Domicilios y rutas (03 §3, CA-EMP-13)
+    expect(puedeArmarRutas(AUXILIAR)).toBe(false);
+    expect(puedeArmarRutas(FARMACEUTICO)).toBe(true);
+    expect(puedeArmarRutas(DOMICILIARIO)).toBe(false);
+    expect(puedeArmarRutas(ADMIN)).toBe(true);
+
+    expect(puedeEjecutarRutas(AUXILIAR)).toBe(false);
+    expect(puedeEjecutarRutas(FARMACEUTICO)).toBe(false);
+    expect(puedeEjecutarRutas(DOMICILIARIO)).toBe(true);
+    expect(puedeEjecutarRutas(ADMIN)).toBe(false);
 
     // RN-EMP-04: mientras esté EN_PREPARACION, solo quien lo tomó o ADMIN puede marcarlo LISTO/cancelarlo
     const pedidoEnPrep = {
@@ -339,5 +352,109 @@ describe("Panel de empleados · Reglas de roles, cliente tipado y errores proble
 
     desuscribir();
     vi.useRealTimers();
+  });
+
+  it("CA_EMP_11 y CA_EMP_12 · cliente tipado de domicilios (crear, reordenar, iniciar y marcar parada fallida)", async () => {
+    const rutaId = "aaaaaaaa-1111-2222-3333-bbbbbbbbbbbb";
+    const parada1Id = "11111111-aaaa-bbbb-cccc-000000000001";
+    const parada2Id = "11111111-aaaa-bbbb-cccc-000000000002";
+
+    const llamadas: Array<{ url: string; method?: string; body?: unknown }> = [];
+    const mockFetch = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input);
+      llamadas.push({
+        url,
+        method: init?.method,
+        body: init?.body ? JSON.parse(String(init.body)) : undefined,
+      });
+
+      if (url.endsWith("/api/v1/gestion/rutas") && init?.method === "POST") {
+        return jsonResponse(
+          {
+            id: rutaId,
+            estado: "PLANEADA",
+            distanciaKm: 4.52,
+            paradas: [
+              { id: parada1Id, orden: 1, estado: "PENDIENTE", distanciaKmDesdeAnterior: 2.1 },
+              { id: parada2Id, orden: 2, estado: "PENDIENTE", distanciaKmDesdeAnterior: 2.42 },
+            ],
+          },
+          201
+        );
+      }
+      if (url.endsWith(`/api/v1/gestion/rutas/${rutaId}/orden`)) {
+        return jsonResponse({
+          id: rutaId,
+          estado: "PLANEADA",
+          distanciaKm: 4.95,
+          paradas: [
+            { id: parada2Id, orden: 1, estado: "PENDIENTE", distanciaKmDesdeAnterior: 2.8 },
+            { id: parada1Id, orden: 2, estado: "PENDIENTE", distanciaKmDesdeAnterior: 2.15 },
+          ],
+        });
+      }
+      if (url.endsWith(`/api/v1/gestion/rutas/${rutaId}/iniciar`)) {
+        return jsonResponse({
+          id: rutaId,
+          estado: "EN_CURSO",
+          distanciaKm: 4.95,
+          paradas: [
+            { id: parada2Id, orden: 1, estado: "PENDIENTE", estadoPedido: "EN_RUTA" },
+            { id: parada1Id, orden: 2, estado: "PENDIENTE", estadoPedido: "EN_RUTA" },
+          ],
+        });
+      }
+      if (url.endsWith(`/api/v1/gestion/rutas/${rutaId}/paradas/${parada2Id}/fallida`)) {
+        return jsonResponse({
+          id: rutaId,
+          estado: "EN_CURSO",
+          paradas: [
+            {
+              id: parada2Id,
+              orden: 1,
+              estado: "FALLIDA",
+              estadoPedido: "CANCELADO",
+              intentosEntrega: 2,
+            },
+            { id: parada1Id, orden: 2, estado: "PENDIENTE", estadoPedido: "EN_RUTA" },
+          ],
+        });
+      }
+      throw new Error(`URL inesperada: ${url}`);
+    }) as unknown as typeof fetch;
+
+    const creada = await farmaApi.crearRuta(
+      {
+        domiciliarioId: DOMICILIARIO.id!,
+        pedidoIds: ["p1", "p2"],
+      },
+      {},
+      { token: "jwt-farm", fetchImpl: mockFetch }
+    );
+    expect(creada.estado).toBe("PLANEADA");
+    expect(creada.distanciaKm).toBe(4.52);
+
+    const reordenada = await farmaApi.reordenarRuta(
+      rutaId,
+      { paradaIds: [parada2Id, parada1Id] },
+      { token: "jwt-farm", fetchImpl: mockFetch }
+    );
+    expect(reordenada.paradas?.[0].id).toBe(parada2Id);
+
+    const iniciada = await farmaApi.iniciarRuta(rutaId, {
+      token: "jwt-farm",
+      fetchImpl: mockFetch,
+    });
+    expect(iniciada.estado).toBe("EN_CURSO");
+
+    const fallida = await farmaApi.marcarParadaFallida(
+      rutaId,
+      parada2Id,
+      { motivo: "Sin respuesta en segundo intento" },
+      { token: "jwt-dom", fetchImpl: mockFetch }
+    );
+    expect(fallida.paradas?.[0].estado).toBe("FALLIDA");
+    expect(fallida.paradas?.[0].estadoPedido).toBe("CANCELADO");
+    expect(llamadas).toHaveLength(4);
   });
 });

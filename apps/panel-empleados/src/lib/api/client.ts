@@ -26,10 +26,22 @@ export type NotificacionesListado = Schemas["NotificacionesListadoResponse"];
 export type NotaOpcionalRequest = Schemas["NotaOpcionalRequest"];
 export type EntregarPedidoRequest = Schemas["EntregarPedidoRequest"];
 export type CancelarPedidoGestionRequest = Schemas["CancelarPedidoGestionRequest"];
+export type DomiciliosPendientes = Schemas["DomiciliosPendientesResponse"];
+export type PedidoPendienteDomicilio = Schemas["PedidoPendienteDomicilioResponse"];
+export type DomiciliarioResumen = Schemas["DomiciliarioResumenResponse"];
+export type RutaDetalle = Schemas["RutaDetalleResponse"];
+export type RutaParada = Schemas["RutaParadaResponse"];
+export type RutaResumenPedido = Schemas["RutaResumenPedidoResponse"];
+export type CrearRutaRequest = Schemas["CrearRutaRequest"];
+export type ReordenarRutaRequest = Schemas["ReordenarRutaRequest"];
+export type EntregarParadaRequest = Schemas["EntregarParadaRequest"];
+export type ParadaFallidaRequest = Schemas["ParadaFallidaRequest"];
 
 export type EstadoPedido = NonNullable<PedidoResumen["estado"]>;
 export type ModalidadPedido = NonNullable<PedidoResumen["modalidad"]>;
 export type EstadoTurno = NonNullable<Turno["estado"]>;
+export type EstadoRuta = NonNullable<RutaDetalle["estado"]>;
+export type EstadoRutaParada = NonNullable<RutaParada["estado"]>;
 export type TipoMovimiento = NonNullable<MovimientoKardex["tipo"]>;
 export type NivelDisponibilidad = NonNullable<InventarioItem["nivel"]>;
 export type RolUsuario = NonNullable<UsuarioResumen["rol"]>;
@@ -49,6 +61,15 @@ export type TurnosQuery = NonNullable<
 >;
 export type NotificacionesQuery = NonNullable<
   paths["/api/v1/gestion/notificaciones"]["get"]["parameters"]["query"]
+>;
+export type DomiciliosPendientesQuery = NonNullable<
+  paths["/api/v1/gestion/domicilios/pendientes"]["get"]["parameters"]["query"]
+>;
+export type RutasQuery = NonNullable<
+  paths["/api/v1/gestion/rutas"]["get"]["parameters"]["query"]
+>;
+export type MisRutasQuery = NonNullable<
+  paths["/api/v1/gestion/rutas/mias"]["get"]["parameters"]["query"]
 >;
 
 export interface ResumenTablero {
@@ -453,6 +474,116 @@ export const farmaApi = {
     return apiRequest<Notificacion>(
       resolvePath("/api/v1/gestion/notificaciones/{id}/leer", { id }),
       { method: "POST" },
+      options
+    );
+  },
+
+  // Domicilios y rutas (RF-EMP-19 a RF-EMP-24)
+  listarDomiciliosPendientes(
+    query: DomiciliosPendientesQuery = {},
+    options?: RequestOptions
+  ): Promise<DomiciliosPendientes> {
+    const qs = buildQueryString(query);
+    return apiRequest<DomiciliosPendientes>(
+      `${resolvePath("/api/v1/gestion/domicilios/pendientes")}${qs}`,
+      { method: "GET" },
+      options
+    );
+  },
+
+  listarRutas(
+    query: RutasQuery = {},
+    options?: RequestOptions
+  ): Promise<RutaDetalle[]> {
+    const qs = buildQueryString(query);
+    return apiRequest<RutaDetalle[]>(
+      `${resolvePath("/api/v1/gestion/rutas")}${qs}`,
+      { method: "GET" },
+      options
+    );
+  },
+
+  listarMisRutas(
+    query: MisRutasQuery = {},
+    options?: RequestOptions
+  ): Promise<RutaDetalle[]> {
+    const qs = buildQueryString(query);
+    return apiRequest<RutaDetalle[]>(
+      `${resolvePath("/api/v1/gestion/rutas/mias")}${qs}`,
+      { method: "GET" },
+      options
+    );
+  },
+
+  obtenerRuta(id: string, options?: RequestOptions): Promise<RutaDetalle> {
+    return apiRequest<RutaDetalle>(
+      resolvePath("/api/v1/gestion/rutas/{id}", { id }),
+      { method: "GET" },
+      options
+    );
+  },
+
+  crearRuta(
+    body: CrearRutaRequest,
+    params: { sedeId?: string } = {},
+    options?: RequestOptions
+  ): Promise<RutaDetalle> {
+    const qs = buildQueryString(params);
+    return apiRequest<RutaDetalle>(
+      `${resolvePath("/api/v1/gestion/rutas")}${qs}`,
+      { method: "POST", body: JSON.stringify(body) },
+      options
+    );
+  },
+
+  reordenarRuta(
+    id: string,
+    body: ReordenarRutaRequest,
+    options?: RequestOptions
+  ): Promise<RutaDetalle> {
+    return apiRequest<RutaDetalle>(
+      resolvePath("/api/v1/gestion/rutas/{id}/orden", { id }),
+      { method: "PUT", body: JSON.stringify(body) },
+      options
+    );
+  },
+
+  iniciarRuta(id: string, options?: RequestOptions): Promise<RutaDetalle> {
+    return apiRequest<RutaDetalle>(
+      resolvePath("/api/v1/gestion/rutas/{id}/iniciar", { id }),
+      { method: "POST" },
+      options
+    );
+  },
+
+  marcarParadaEntregada(
+    rutaId: string,
+    paradaId: string,
+    body: EntregarParadaRequest = {},
+    options?: RequestOptions
+  ): Promise<RutaDetalle> {
+    return apiRequest<RutaDetalle>(
+      resolvePath("/api/v1/gestion/rutas/{id}/paradas/{paradaId}/entregar", {
+        id: rutaId,
+        paradaId,
+      }),
+      { method: "POST", body: JSON.stringify(body) },
+      options
+    );
+  },
+
+  marcarParadaFallida(
+    rutaId: string,
+    paradaId: string,
+    body: ParadaFallidaRequest,
+    options?: RequestOptions
+  ): Promise<RutaDetalle> {
+    return apiRequest<RutaDetalle>(
+      resolvePath("/api/v1/gestion/rutas/{id}/paradas/{paradaId}/fallida", {
+        id: rutaId,
+        paradaId,
+      }),
+      { method: "POST", body: JSON.stringify(body) },
       options
     );
   },

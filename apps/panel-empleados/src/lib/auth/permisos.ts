@@ -33,6 +33,14 @@ export function puedeGestionarPedidosYTurnos(usuario?: UsuarioResumen | null): b
   return esAdmin(usuario) || esFarmaceutico(usuario) || esAuxiliar(usuario);
 }
 
+export function puedeArmarRutas(usuario?: UsuarioResumen | null): boolean {
+  return esAdmin(usuario) || esFarmaceutico(usuario);
+}
+
+export function puedeEjecutarRutas(usuario?: UsuarioResumen | null): boolean {
+  return esDomiciliario(usuario);
+}
+
 export function etiquetaRolUsuario(usuario?: UsuarioResumen | null): string {
   if (!usuario) return "";
   if (usuario.rol === "ADMIN") return "Administrador";

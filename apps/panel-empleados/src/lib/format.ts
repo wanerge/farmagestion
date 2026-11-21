@@ -1,5 +1,7 @@
 import type {
   EstadoPedido,
+  EstadoRuta,
+  EstadoRutaParada,
   EstadoTurno,
   ModalidadPedido,
   NivelDisponibilidad,
@@ -148,6 +150,35 @@ export const CLASE_MOVIMIENTO: Record<TipoMovimiento, string> = {
   TRASLADO_SALIDA: "bg-amber-100 text-amber-800",
   TRASLADO_ENTRADA: "bg-lime-100 text-lime-800",
 };
+
+export const ETIQUETA_ESTADO_RUTA: Record<EstadoRuta, string> = {
+  PLANEADA: "Planeada",
+  EN_CURSO: "En curso",
+  COMPLETADA: "Completada",
+};
+
+export const CLASE_ESTADO_RUTA: Record<EstadoRuta, string> = {
+  PLANEADA: "bg-sky-100 text-sky-800 border-sky-200",
+  EN_CURSO: "bg-indigo-100 text-indigo-800 border-indigo-200",
+  COMPLETADA: "bg-emerald-100 text-emerald-800 border-emerald-200",
+};
+
+export const ETIQUETA_ESTADO_PARADA: Record<EstadoRutaParada, string> = {
+  PENDIENTE: "Pendiente",
+  ENTREGADA: "Entregada",
+  FALLIDA: "Fallida",
+};
+
+export const CLASE_ESTADO_PARADA: Record<EstadoRutaParada, string> = {
+  PENDIENTE: "bg-amber-100 text-amber-900 border-amber-200",
+  ENTREGADA: "bg-emerald-100 text-emerald-800 border-emerald-200",
+  FALLIDA: "bg-rose-100 text-rose-800 border-rose-200",
+};
+
+export function formatearDistanciaKm(km?: number | null): string {
+  if (km === undefined || km === null || Number.isNaN(km)) return "0,00 km";
+  return `${km.toFixed(2).replace(".", ",")} km`;
+}
 
 export function acortarUuid(id?: string | null): string {
   if (!id) return "—";
