@@ -1,0 +1,182 @@
+[
+  {
+    "codigo": "MED-0001",
+    "nombre": "Acetaminofén 500 mg",
+    "principioActivo": "Acetaminofén",
+    "presentacion": "Tableta caja x 20"
+  },
+  {
+    "codigo": "MED-0002",
+    "nombre": "Ibuprofeno 400 mg",
+    "principioActivo": "Ibuprofeno",
+    "presentacion": "Tableta recubierta caja x 20"
+  },
+  {
+    "codigo": "MED-0003",
+    "nombre": "Naproxeno 250 mg",
+    "principioActivo": "Naproxeno",
+    "presentacion": "Tableta caja x 10"
+  },
+  {
+    "codigo": "MED-0004",
+    "nombre": "Losartán 50 mg",
+    "principioActivo": "Losartán potásico",
+    "presentacion": "Tableta recubierta caja x 30"
+  },
+  {
+    "codigo": "MED-0005",
+    "nombre": "Enalapril 20 mg",
+    "principioActivo": "Enalapril maleato",
+    "presentacion": "Tableta caja x 30"
+  },
+  {
+    "codigo": "MED-0006",
+    "nombre": "Amlodipino 5 mg",
+    "principioActivo": "Amlodipino besilato",
+    "presentacion": "Tableta caja x 30"
+  },
+  {
+    "codigo": "MED-0007",
+    "nombre": "Hidroclorotiazida 25 mg",
+    "principioActivo": "Hidroclorotiazida",
+    "presentacion": "Tableta caja x 30"
+  },
+  {
+    "codigo": "MED-0008",
+    "nombre": "Metformina 850 mg",
+    "principioActivo": "Metformina clorhidrato",
+    "presentacion": "Tableta recubierta caja x 30"
+  },
+  {
+    "codigo": "MED-0009",
+    "nombre": "Glibenclamida 5 mg",
+    "principioActivo": "Glibenclamida",
+    "presentacion": "Tableta caja x 30"
+  },
+  {
+    "codigo": "MED-0010",
+    "nombre": "Atorvastatina 20 mg",
+    "principioActivo": "Atorvastatina cálcica",
+    "presentacion": "Tableta recubierta caja x 30"
+  },
+  {
+    "codigo": "MED-0011",
+    "nombre": "Rosuvastatina 10 mg",
+    "principioActivo": "Rosuvastatina cálcica",
+    "presentacion": "Tableta recubierta caja x 30"
+  },
+  {
+    "codigo": "MED-0012",
+    "nombre": "Omeprazol 20 mg",
+    "principioActivo": "Omeprazol",
+    "presentacion": "Cápsula de liberación retardada caja x 30"
+  },
+  {
+    "codigo": "MED-0013",
+    "nombre": "Esomeprazol 40 mg",
+    "principioActivo": "Esomeprazol magnésico",
+    "presentacion": "Tableta gastrorresistente caja x 14"
+  },
+  {
+    "codigo": "MED-0014",
+    "nombre": "Amoxicilina 500 mg",
+    "principioActivo": "Amoxicilina trihidrato",
+    "presentacion": "Cápsula caja x 21"
+  },
+  {
+    "codigo": "MED-0015",
+    "nombre": "Azitromicina 500 mg",
+    "principioActivo": "Azitromicina",
+    "presentacion": "Tableta recubierta caja x 3"
+  },
+  {
+    "codigo": "MED-0016",
+    "nombre": "Cefalexina 500 mg",
+    "principioActivo": "Cefalexina",
+    "presentacion": "Cápsula caja x 20"
+  },
+  {
+    "codigo": "MED-0017",
+    "nombre": "Ciprofloxacino 500 mg",
+    "principioActivo": "Ciprofloxacino clorhidrato",
+    "presentacion": "Tableta recubierta caja x 10"
+  },
+  {
+    "codigo": "MED-0018",
+    "nombre": "Loratadina 10 mg",
+    "principioActivo": "Loratadina",
+    "presentacion": "Tableta caja x 10"
+  },
+  {
+    "codigo": "MED-0019",
+    "nombre": "Cetirizina 10 mg",
+    "principioActivo": "Cetirizina diclorhidrato",
+    "presentacion": "Tableta recubierta caja x 10"
+  },
+  {
+    "codigo": "MED-0020",
+    "nombre": "Salbutamol 100 mcg",
+    "principioActivo": "Salbutamol sulfato",
+    "presentacion": "Aerosol inhalador frasco x 200 dosis"
+  },
+  {
+    "codigo": "MED-0021",
+    "nombre": "Beclometasona 250 mcg",
+    "principioActivo": "Beclometasona dipropionato",
+    "presentacion": "Aerosol inhalador frasco x 200 dosis"
+  },
+  {
+    "codigo": "MED-0022",
+    "nombre": "Levotiroxina 50 mcg",
+    "principioActivo": "Levotiroxina sódica",
+    "presentacion": "Tableta caja x 30"
+  },
+  {
+    "codigo": "MED-0023",
+    "nombre": "Ácido acetilsalicílico 100 mg",
+    "principioActivo": "Ácido acetilsalicílico",
+    "presentacion": "Tableta recubierta caja x 30"
+  },
+  {
+    "codigo": "MED-0024",
+    "nombre": "Clopidogrel 75 mg",
+    "principioActivo": "Clopidogrel bisulfato",
+    "presentacion": "Tableta recubierta caja x 28"
+  },
+  {
+    "codigo": "MED-0025",
+    "nombre": "Metoprolol 50 mg",
+    "principioActivo": "Metoprolol tartrato",
+    "presentacion": "Tableta caja x 30"
+  },
+  {
+    "codigo": "MED-0026",
+    "nombre": "Furosemida 40 mg",
+    "principioActivo": "Furosemida",
+    "presentacion": "Tableta caja x 20"
+  },
+  {
+    "codigo": "MED-0027",
+    "nombre": "Prednisolona 5 mg",
+    "principioActivo": "Prednisolona",
+    "presentacion": "Tableta caja x 30"
+  },
+  {
+    "codigo": "MED-0028",
+    "nombre": "Diclofenaco 50 mg",
+    "principioActivo": "Diclofenaco sódico",
+    "presentacion": "Tableta gastrorresistente caja x 20"
+  },
+  {
+    "codigo": "MED-0029",
+    "nombre": "Fluconazol 150 mg",
+    "principioActivo": "Fluconazol",
+    "presentacion": "Cápsula caja x 2"
+  },
+  {
+    "codigo": "MED-0030",
+    "nombre": "Sales de rehidratación oral",
+    "principioActivo": "Glucosa + electrolitos",
+    "presentacion": "Polvo para solución oral sobre x 4"
+  }
+]

@@ -17,12 +17,12 @@
 
 ## Servicios y URLs
 
-| Servicio         | Plataforma | Nombre                     | URL real    |
-| ---------------- | ---------- | -------------------------- | ----------- |
-| simulador-eps    | Vercel     | farmagestion-simulador-eps | <completar> |
-| portal-paciente  | Vercel     | farmagestion-portal        | <completar> |
-| panel-empleados  | Vercel     | farmagestion-panel         | <completar> |
-| farmagestion-api | Render     | farmagestion-api           | <completar> |
+| Servicio         | Plataforma | Nombre                     | URL real                                      |
+| ---------------- | ---------- | -------------------------- | --------------------------------------------- |
+| simulador-eps    | Vercel     | farmagestion-simulador-eps | https://farmagestion-simulador-eps.vercel.app |
+| portal-paciente  | Vercel     | farmagestion-portal        | https://farmagestion-portal.vercel.app        |
+| panel-empleados  | Vercel     | farmagestion-panel         | https://farmagestion-panel.vercel.app         |
+| farmagestion-api | Render     | farmagestion-api           | https://farmagestion-api.onrender.com         |
 
 ## Variables (solo nombres; los valores están en los paneles)
 

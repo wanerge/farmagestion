@@ -80,6 +80,16 @@ docker run --rm -m 512m -p 8080:8080 \
 
 Verificación: `curl http://localhost:8080/api/v1/health`
 
+## Usuarios de demostración (`farma_db`)
+
+Todos los usuarios semilla usan la contraseña de demostración **`Farma2026!`**:
+
+- **Administrador:** `admin@farmagestion.demo`
+- **Sede Centro (`SEDE-CENTRO`):** `farmaceutico.centro@farmagestion.demo`, `auxiliar.centro@farmagestion.demo`, `domiciliario.centro@farmagestion.demo`
+- **Sede Bello (`SEDE-BELLO`):** `farmaceutico.bello@farmagestion.demo`, `auxiliar.bello@farmagestion.demo`, `domiciliario.bello@farmagestion.demo`
+- **Sede Itagüí (`SEDE-ITAGUI`):** `farmaceutico.itagui@farmagestion.demo`, `auxiliar.itagui@farmagestion.demo`, `domiciliario.itagui@farmagestion.demo`
+- **Pacientes:** `paciente1@farmagestion.demo` a `paciente5@farmagestion.demo` (`CC 1000000001` a `1000000005`)
+
 ## Despliegue
 
 Ver [docs/despliegue.md](docs/despliegue.md).

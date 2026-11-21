@@ -1,0 +1,110 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model PacienteEps {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tipoDocumento   String    @map("tipo_documento") @db.VarChar(10)
+  documento       String    @db.VarChar(30)
+  nombres         String    @db.VarChar(120)
+  apellidos       String    @db.VarChar(120)
+  fechaNacimiento DateTime  @map("fecha_nacimiento") @db.Date
+  eps             String    @db.VarChar(120)
+  telefono        String?   @db.VarChar(30)
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  formulas        Formula[]
+
+  @@unique([tipoDocumento, documento], map: "uq_paciente_eps_documento")
+  @@map("paciente_eps")
+}
+
+model Medico {
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  nombre       String    @db.VarChar(150)
+  registro     String    @unique @db.VarChar(40)
+  especialidad String    @db.VarChar(120)
+  formulas     Formula[]
+
+  @@map("medico")
+}
+
+model MedicamentoCatalogo {
+  codigo            String             @id @db.VarChar(32)
+  nombre            String             @db.VarChar(200)
+  principioActivo   String             @map("principio_activo") @db.VarChar(200)
+  presentacion      String             @db.VarChar(200)
+  formulaItems      FormulaItem[]
+  dispensacionItems DispensacionItem[]
+
+  @@map("medicamento_catalogo")
+}
+
+model Formula {
+  id               String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  codigo           String         @unique @db.VarChar(40)
+  pacienteId       String         @map("paciente_id") @db.Uuid
+  medicoId         String         @map("medico_id") @db.Uuid
+  fechaEmision     DateTime       @map("fecha_emision") @db.Date
+  fechaVencimiento DateTime       @map("fecha_vencimiento") @db.Date
+  estado           String         @db.VarChar(30)
+  observaciones    String?        @db.Text
+  createdAt        DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  paciente         PacienteEps    @relation(fields: [pacienteId], references: [id])
+  medico           Medico         @relation(fields: [medicoId], references: [id])
+  items            FormulaItem[]
+  dispensaciones   Dispensacion[]
+
+  @@index([pacienteId], map: "idx_formula_paciente_id")
+  @@index([medicoId], map: "idx_formula_medico_id")
+  @@map("formula")
+}
+
+model FormulaItem {
+  id                 String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  formulaId          String              @map("formula_id") @db.Uuid
+  medicamentoCodigo  String              @map("medicamento_codigo") @db.VarChar(32)
+  dosis              String              @db.VarChar(120)
+  frecuencia         String              @db.VarChar(120)
+  duracionDias       Int                 @map("duracion_dias")
+  cantidadAutorizada Int                 @map("cantidad_autorizada")
+  cantidadDispensada Int                 @default(0) @map("cantidad_dispensada")
+  formula            Formula             @relation(fields: [formulaId], references: [id], onDelete: Cascade)
+  medicamento        MedicamentoCatalogo @relation(fields: [medicamentoCodigo], references: [codigo])
+
+  @@unique([formulaId, medicamentoCodigo], map: "uq_formula_item_medicamento")
+  @@index([formulaId], map: "idx_formula_item_formula_id")
+  @@index([medicamentoCodigo], map: "idx_formula_item_medicamento_codigo")
+  @@map("formula_item")
+}
+
+model Dispensacion {
+  id             String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  formulaId      String             @map("formula_id") @db.Uuid
+  pedidoRef      String             @map("pedido_ref") @db.VarChar(60)
+  sedeCodigo     String             @map("sede_codigo") @db.VarChar(32)
+  idempotencyKey String             @unique @map("idempotency_key") @db.VarChar(120)
+  fecha          DateTime           @default(now()) @db.Timestamptz(6)
+  formula        Formula            @relation(fields: [formulaId], references: [id])
+  items          DispensacionItem[]
+
+  @@index([formulaId], map: "idx_dispensacion_formula_id")
+  @@map("dispensacion")
+}
+
+model DispensacionItem {
+  dispensacionId    String              @map("dispensacion_id") @db.Uuid
+  medicamentoCodigo String              @map("medicamento_codigo") @db.VarChar(32)
+  cantidad          Int
+  dispensacion      Dispensacion        @relation(fields: [dispensacionId], references: [id], onDelete: Cascade)
+  medicamento       MedicamentoCatalogo @relation(fields: [medicamentoCodigo], references: [codigo])
+
+  @@id([dispensacionId, medicamentoCodigo])
+  @@index([medicamentoCodigo], map: "idx_dispensacion_item_medicamento_codigo")
+  @@map("dispensacion_item")
+}
