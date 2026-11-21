@@ -1,0 +1,16 @@
+package co.farmagestion.api.catalogo;
+
+import java.util.Collection;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+interface SedeRepository extends JpaRepository<Sede, UUID> {
+
+	List<Sede> findAllByActivaTrueOrderByNombreAsc();
+
+	Optional<Sede> findByIdAndActivaTrue(UUID id);
+
+	List<Sede> findAllByIdIn(Collection<UUID> ids);
+}

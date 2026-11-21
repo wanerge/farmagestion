@@ -87,4 +87,8 @@ public class Inventario {
 	public long getVersion() {
 		return version;
 	}
+
+	public int getDisponible() {
+		return cantidadFisica - cantidadReservada;
+	}
 }
