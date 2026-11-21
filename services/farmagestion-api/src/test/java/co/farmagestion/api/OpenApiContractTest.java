@@ -60,6 +60,14 @@ class OpenApiContractTest {
 		assertThat(paths.has("/api/v1/gestion/turnos/{id}/vencer")).isTrue();
 		assertThat(paths.has("/api/v1/gestion/public/sala/{sedeCodigo}")).isTrue();
 		assertThat(paths.has("/api/v1/gestion/notificaciones")).isTrue();
+		assertThat(paths.has("/api/v1/gestion/domicilios/pendientes")).isTrue();
+		assertThat(paths.has("/api/v1/gestion/rutas")).isTrue();
+		assertThat(paths.has("/api/v1/gestion/rutas/mias")).isTrue();
+		assertThat(paths.has("/api/v1/gestion/rutas/{id}")).isTrue();
+		assertThat(paths.has("/api/v1/gestion/rutas/{id}/orden")).isTrue();
+		assertThat(paths.has("/api/v1/gestion/rutas/{id}/iniciar")).isTrue();
+		assertThat(paths.has("/api/v1/gestion/rutas/{id}/paradas/{paradaId}/entregar")).isTrue();
+		assertThat(paths.has("/api/v1/gestion/rutas/{id}/paradas/{paradaId}/fallida")).isTrue();
 
 		if (Boolean.parseBoolean(System.getProperty("export.openapi", "false"))) {
 			Files.createDirectories(CONTRACT_PATH.getParent());

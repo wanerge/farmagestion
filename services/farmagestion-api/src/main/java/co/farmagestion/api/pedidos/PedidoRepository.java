@@ -42,6 +42,11 @@ interface PedidoRepository extends JpaRepository<Pedido, UUID>, JpaSpecification
 			Collection<EstadoPedido> estados,
 			Instant ahora);
 
+	List<Pedido> findAllBySedeIdAndModalidadAndEstadoOrderByExpiraEnAsc(
+			UUID sedeId,
+			ModalidadPedido modalidad,
+			EstadoPedido estado);
+
 	@Query("SELECT DISTINCT p.formulaRefId FROM Pedido p WHERE p.estado IN :estados")
 	List<UUID> findDistinctFormulaRefIdsByEstadoIn(@Param("estados") Collection<EstadoPedido> estados);
 

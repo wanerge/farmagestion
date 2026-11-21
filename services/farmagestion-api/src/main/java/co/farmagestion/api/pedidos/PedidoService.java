@@ -9,6 +9,9 @@ import co.farmagestion.api.catalogo.SedePublicaResponse;
 import co.farmagestion.api.common.domain.ParametroService;
 import co.farmagestion.api.common.web.ApiException;
 import co.farmagestion.api.common.web.PaginaResponse;
+import co.farmagestion.api.domicilios.ResultadoIntentoFallido;
+import co.farmagestion.api.domicilios.RutaPorPedidoConsulta;
+import co.farmagestion.api.domicilios.RutaResumenPedidoResponse;
 import co.farmagestion.api.formulas.FormulaRefSnapshot;
 import co.farmagestion.api.formulas.FormulaRefSnapshot.FormulaItemSnapshot;
 import co.farmagestion.api.formulas.FormulaService;
@@ -40,6 +43,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -89,6 +93,7 @@ public class PedidoService {
 	private final CatalogoConsultaService catalogoConsultaService;
 	private final AuthService authService;
 	private final ParametroService parametroService;
+	private final ObjectProvider<RutaPorPedidoConsulta> rutaPorPedidoConsultaProvider;
 	private final ApplicationEventPublisher eventPublisher;
 	private final TransactionTemplate transactionTemplate;
 	private final TransactionTemplate requiresNewTxTemplate;
@@ -105,6 +110,7 @@ public class PedidoService {
 			CatalogoConsultaService catalogoConsultaService,
 			AuthService authService,
 			ParametroService parametroService,
+			ObjectProvider<RutaPorPedidoConsulta> rutaPorPedidoConsultaProvider,
 			ApplicationEventPublisher eventPublisher,
 			PlatformTransactionManager transactionManager,
 			Clock clock) {
@@ -118,6 +124,7 @@ public class PedidoService {
 		this.catalogoConsultaService = catalogoConsultaService;
 		this.authService = authService;
 		this.parametroService = parametroService;
+		this.rutaPorPedidoConsultaProvider = rutaPorPedidoConsultaProvider;
 		this.eventPublisher = eventPublisher;
 		this.transactionTemplate = new TransactionTemplate(transactionManager);
 		this.requiresNewTxTemplate = new TransactionTemplate(transactionManager);
@@ -599,6 +606,154 @@ public class PedidoService {
 	}
 
 	/**
+	 * Transiciona los pedidos de una ruta recién iniciada de LISTO a EN_RUTA (RF-EMP-21, CA-PAC-10).
+	 */
+	@Transactional
+	public void iniciarEntregaPedidosEnRuta(UUID sedeId, List<UUID> pedidoIds, UUID usuarioId, UUID rutaId) {
+		List<UUID> ordenadosPorId = pedidoIds.stream().distinct().sorted().toList();
+		Instant ahora = Instant.now(clock);
+
+		for (UUID pedidoId : ordenadosPorId) {
+			Pedido pedido = pedidoRepository.findByIdForUpdate(pedidoId)
+					.orElseThrow(() -> ApiException.notFound(
+							"PEDIDO_NO_ENCONTRADO",
+							"Pedido no encontrado",
+							"No se encontró el pedido " + pedidoId + " de la ruta."));
+
+			if (!sedeId.equals(pedido.getSedeId())
+					|| pedido.getModalidad() != ModalidadPedido.DOMICILIO
+					|| pedido.getEstado() != EstadoPedido.LISTO) {
+				throw ApiException.conflict(
+						"TRANSICION_INVALIDA",
+						"Pedido no elegible para iniciar ruta",
+						"El pedido " + pedido.getCodigo()
+								+ " debe ser de modalidad DOMICILIO en estado LISTO para iniciar la ruta (actual: "
+								+ pedido.getEstado() + ").");
+			}
+
+			EstadoPedido anterior = pedido.getEstado();
+			pedido.setEstado(EstadoPedido.EN_RUTA);
+			pedido.setUpdatedAt(ahora);
+			pedidoRepository.save(pedido);
+
+			String nota = "Pedido despachado en ruta de domicilio";
+			registrarHistorial(pedido.getId(), anterior, EstadoPedido.EN_RUTA, usuarioId, nota);
+			eventPublisher.publishEvent(new PedidoEstadoCambiadoEvent(
+					pedido.getId(), pedido.getCodigo(), pedido.getPacienteId(), pedido.getSedeId(),
+					anterior, EstadoPedido.EN_RUTA, nota));
+		}
+	}
+
+	/**
+	 * Marca un pedido DOMICILIO en estado EN_RUTA como ENTREGADO, dispensa stock y encola outbox (RF-EMP-22, RN-06).
+	 */
+	@Transactional
+	public void entregarPedidoDomicilio(UUID pedidoId, UUID domiciliarioId, String notaOpcional) {
+		Pedido pedido = pedidoRepository.findByIdForUpdate(pedidoId)
+				.orElseThrow(() -> ApiException.notFound(
+						"PEDIDO_NO_ENCONTRADO",
+						"Pedido no encontrado",
+						"No se encontró el pedido asociado a la parada."));
+
+		if (pedido.getModalidad() != ModalidadPedido.DOMICILIO || pedido.getEstado() != EstadoPedido.EN_RUTA) {
+			throw ApiException.conflict(
+					"TRANSICION_INVALIDA",
+					"Transición inválida",
+					"Solo se pueden entregar por domicilio pedidos en estado EN_RUTA (actual: "
+							+ pedido.getEstado() + ").");
+		}
+
+		List<PedidoItem> items = pedidoItemRepository.findAllByPedidoId(pedido.getId());
+		List<SolicitudStockItem> aDispensar = new ArrayList<>();
+		for (PedidoItem item : items) {
+			if (item.getCantidadReservada() > 0) {
+				aDispensar.add(new SolicitudStockItem(item.getMedicamentoId(), item.getCantidadReservada()));
+				item.setCantidadEntregada(item.getCantidadReservada());
+			}
+		}
+		if (aDispensar.isEmpty()) {
+			throw ApiException.conflict(
+					"PEDIDO_SIN_STOCK_RESERVADO",
+					"Pedido sin stock reservado",
+					"El pedido no tiene unidades reservadas para entregar.");
+		}
+
+		Instant ahora = Instant.now(clock);
+		inventarioOperacionesService.dispensar(
+				pedido.getSedeId(),
+				aDispensar,
+				"PEDIDO",
+				pedido.getId(),
+				domiciliarioId,
+				"Entrega a domicilio de pedido " + pedido.getCodigo());
+		pedidoItemRepository.saveAllAndFlush(items);
+
+		EstadoPedido anterior = pedido.getEstado();
+		pedido.setEstado(EstadoPedido.ENTREGADO);
+		pedido.setEntregadoEn(ahora);
+		pedido.setUpdatedAt(ahora);
+		pedidoRepository.save(pedido);
+
+		String nota = (notaOpcional == null || notaOpcional.isBlank())
+				? "Pedido entregado a domicilio"
+				: notaOpcional.trim();
+		registrarHistorial(pedido.getId(), anterior, EstadoPedido.ENTREGADO, domiciliarioId, nota);
+		encolarDispensacionOutbox(pedido, items, ahora);
+
+		eventPublisher.publishEvent(new PedidoEstadoCambiadoEvent(
+				pedido.getId(), pedido.getCodigo(), pedido.getPacienteId(), pedido.getSedeId(),
+				anterior, EstadoPedido.ENTREGADO, nota));
+	}
+
+	/**
+	 * Registra un intento fallido de entrega a domicilio (RF-EMP-23, CA-EMP-12):
+	 * incrementa intentos_entrega; si alcanza maxIntentos cancela y libera stock, si no regresa a LISTO.
+	 */
+	@Transactional
+	public ResultadoIntentoFallido registrarEntregaFallidaDomicilio(
+			UUID pedidoId,
+			UUID domiciliarioId,
+			String motivo,
+			int maxIntentos) {
+		Pedido pedido = pedidoRepository.findByIdForUpdate(pedidoId)
+				.orElseThrow(() -> ApiException.notFound(
+						"PEDIDO_NO_ENCONTRADO",
+						"Pedido no encontrado",
+						"No se encontró el pedido asociado a la parada."));
+
+		if (pedido.getModalidad() != ModalidadPedido.DOMICILIO || pedido.getEstado() != EstadoPedido.EN_RUTA) {
+			throw ApiException.conflict(
+					"TRANSICION_INVALIDA",
+					"Transición inválida",
+					"Solo se puede reportar entrega fallida para pedidos DOMICILIO en estado EN_RUTA (actual: "
+							+ pedido.getEstado() + ").");
+		}
+
+		int nuevosIntentos = pedido.getIntentosEntrega() + 1;
+		pedido.setIntentosEntrega(nuevosIntentos);
+
+		if (nuevosIntentos >= maxIntentos) {
+			String notaCancelacion = "Intentos de entrega agotados (" + nuevosIntentos + "/" + maxIntentos
+					+ "). Motivo: " + motivo;
+			ejecutarCancelacion(pedido, domiciliarioId, notaCancelacion);
+			return new ResultadoIntentoFallido(true, nuevosIntentos, EstadoPedido.CANCELADO.name());
+		}
+
+		EstadoPedido anterior = pedido.getEstado();
+		pedido.setEstado(EstadoPedido.LISTO);
+		pedido.setUpdatedAt(Instant.now(clock));
+		pedidoRepository.save(pedido);
+
+		String nota = "Entrega fallida (intento " + nuevosIntentos + "/" + maxIntentos + "). Motivo: " + motivo;
+		registrarHistorial(pedido.getId(), anterior, EstadoPedido.LISTO, domiciliarioId, nota);
+
+		eventPublisher.publishEvent(new PedidoEstadoCambiadoEvent(
+				pedido.getId(), pedido.getCodigo(), pedido.getPacienteId(), pedido.getSedeId(),
+				anterior, EstadoPedido.LISTO, nota));
+		return new ResultadoIntentoFallido(false, nuevosIntentos, EstadoPedido.LISTO.name());
+	}
+
+	/**
 	 * Vence un pedido asociado a un turno marcado como no presentado (RF-EMP-17 o VencerTurnos).
 	 */
 	@Transactional
@@ -927,6 +1082,10 @@ public class PedidoService {
 		List<PedidoItem> items = pedidoItemRepository.findAllByPedidoId(pedidoId);
 		List<PedidoHistorial> historial = pedidoHistorialRepository.findAllByPedidoIdOrderByCreatedAtAsc(pedidoId);
 		TurnoResponse turno = turnoService.obtenerPorPedidoId(pedidoId).orElse(null);
+		RutaPorPedidoConsulta rutaConsulta = rutaPorPedidoConsultaProvider.getIfAvailable();
+		RutaResumenPedidoResponse ruta = (rutaConsulta != null && pedido.getModalidad() == ModalidadPedido.DOMICILIO)
+				? rutaConsulta.obtenerResumenPorPedido(pedidoId).orElse(null)
+				: null;
 
 		SedePublicaResponse sede = catalogoConsultaService.obtenerSedePorId(pedido.getSedeId()).orElse(null);
 		String formulaCodigo = formulaService.obtenerSnapshotLocal(pedido.getFormulaRefId())
@@ -984,6 +1143,7 @@ public class PedidoService {
 				pedido.getListoEn(),
 				pedido.getEntregadoEn(),
 				turno,
+				ruta,
 				itemsDto,
 				historialDto);
 	}

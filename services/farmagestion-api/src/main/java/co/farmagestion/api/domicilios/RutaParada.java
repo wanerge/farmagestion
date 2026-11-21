@@ -23,7 +23,7 @@ public class RutaParada {
 	@Column(name = "ruta_id", nullable = false)
 	private UUID rutaId;
 
-	@Column(name = "pedido_id", nullable = false, unique = true)
+	@Column(name = "pedido_id", nullable = false)
 	private UUID pedidoId;
 
 	@Column(name = "orden", nullable = false)

@@ -1,5 +1,6 @@
 package co.farmagestion.api.pedidos;
 
+import co.farmagestion.api.domicilios.RutaResumenPedidoResponse;
 import co.farmagestion.api.turnos.TurnoResponse;
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -33,6 +34,7 @@ public record PedidoDetalleResponse(
 		Instant listoEn,
 		Instant entregadoEn,
 		TurnoResponse turno,
+		RutaResumenPedidoResponse ruta,
 		List<PedidoItemResponse> items,
 		List<PedidoHistorialResponse> historial) {
 

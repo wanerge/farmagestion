@@ -10,15 +10,6 @@
     "description" : "Generated server url"
   } ],
   "tags" : [ {
-    "name" : "Pedidos del paciente",
-    "description" : "Creación con reserva atómica, seguimiento, línea de tiempo y cancelación de pedidos (RF-PAC-10 a RF-PAC-16)"
-  }, {
-    "name" : "Gestión de pedidos",
-    "description" : "Bandeja operativa, preparación, entrega con verificación de documento y cancelación por sede (RF-EMP-08 a RF-EMP-12)"
-  }, {
-    "name" : "Autenticación",
-    "description" : "Registro de pacientes e inicio de sesión con JWT HS256"
-  }, {
     "name" : "Turnos del paciente",
     "description" : "Consulta de franjas horarias con cupo para recoger en sede (RF-PAC-11, RN-PAC-05)"
   }, {
@@ -42,6 +33,18 @@
   }, {
     "name" : "Perfil del paciente",
     "description" : "Consulta y edición de perfil del paciente autenticado (RF-PAC-03)"
+  }, {
+    "name" : "Pedidos del paciente",
+    "description" : "Creación con reserva atómica, seguimiento, línea de tiempo y cancelación de pedidos (RF-PAC-10 a RF-PAC-16)"
+  }, {
+    "name" : "Gestión de pedidos",
+    "description" : "Bandeja operativa, preparación, entrega con verificación de documento y cancelación por sede (RF-EMP-08 a RF-EMP-12)"
+  }, {
+    "name" : "Autenticación",
+    "description" : "Registro de pacientes e inicio de sesión con JWT HS256"
+  }, {
+    "name" : "Domicilios y rutas",
+    "description" : "Planeación heurística, reordenamiento, inicio y ejecución de rutas de domicilio (RF-EMP-19 a RF-EMP-24)"
   }, {
     "name" : "Fórmulas del paciente",
     "description" : "Vinculación, consulta con saldos, matriz de disponibilidad y descarga de PDF de fórmulas (RF-PAC-06 a RF-PAC-09)"
@@ -90,6 +93,48 @@
               "*/*" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/PerfilPacienteResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/api/v1/gestion/rutas/{id}/orden" : {
+      "put" : {
+        "tags" : [ "Domicilios y rutas" ],
+        "summary" : "Reordenar paradas de una ruta",
+        "description" : "Reordena manualmente las paradas de una ruta PLANEADA y recalcula las distancias estimadas (RF-EMP-21).",
+        "operationId" : "reordenarParadas",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ReordenarRutaRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/RutaDetalleResponse"
                 }
               }
             }
@@ -373,6 +418,220 @@
               "*/*" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/TurnoResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/api/v1/gestion/rutas" : {
+      "get" : {
+        "tags" : [ "Domicilios y rutas" ],
+        "summary" : "Listar rutas de la sede",
+        "description" : "Lista las rutas planeadas, en curso y completadas de la sede para la fecha indicada (por defecto hoy).",
+        "operationId" : "listarRutas",
+        "parameters" : [ {
+          "name" : "sedeId",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "name" : "fecha",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/RutaDetalleResponse"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      },
+      "post" : {
+        "tags" : [ "Domicilios y rutas" ],
+        "summary" : "Crear ruta de domicilio",
+        "description" : "Crea una ruta PLANEADA ordenando los pedidos mediante vecino más cercano (Haversine) y una pasada de 2-opt, respetando domicilio.max_paradas (RF-EMP-20, RN-EMP-06, CA-EMP-11).",
+        "operationId" : "crearRuta",
+        "parameters" : [ {
+          "name" : "sedeId",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CrearRutaRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Created",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/RutaDetalleResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/api/v1/gestion/rutas/{id}/paradas/{paradaId}/fallida" : {
+      "post" : {
+        "tags" : [ "Domicilios y rutas" ],
+        "summary" : "Marcar parada como fallida",
+        "description" : "Marca la parada FALLIDA con motivo, incrementa intentos_entrega y devuelve el pedido a LISTO o lo cancela liberando stock al alcanzar domicilio.max_intentos (RF-EMP-22, RF-EMP-23, RF-EMP-24, CA-EMP-12).",
+        "operationId" : "marcarParadaFallida",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "name" : "paradaId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ParadaFallidaRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/RutaDetalleResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/api/v1/gestion/rutas/{id}/paradas/{paradaId}/entregar" : {
+      "post" : {
+        "tags" : [ "Domicilios y rutas" ],
+        "summary" : "Marcar parada como entregada",
+        "description" : "Marca la parada ENTREGADA, dispensa el stock del pedido, encola la dispensación al simulador y completa la ruta si no quedan paradas pendientes (RF-EMP-22, RF-EMP-24, RN-06).",
+        "operationId" : "marcarParadaEntregada",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "name" : "paradaId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/EntregarParadaRequest"
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/RutaDetalleResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/api/v1/gestion/rutas/{id}/iniciar" : {
+      "post" : {
+        "tags" : [ "Domicilios y rutas" ],
+        "summary" : "Iniciar ruta",
+        "description" : "Pasa la ruta de PLANEADA a EN_CURSO, pasa todos sus pedidos a EN_RUTA y notifica a los pacientes (RF-EMP-21, CA-PAC-10).",
+        "operationId" : "iniciarRuta",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/RutaDetalleResponse"
                 }
               }
             }
@@ -1039,6 +1298,73 @@
         } ]
       }
     },
+    "/api/v1/gestion/rutas/{id}" : {
+      "get" : {
+        "tags" : [ "Domicilios y rutas" ],
+        "summary" : "Consultar detalle de ruta",
+        "description" : "Devuelve el detalle y paradas de una ruta. Un domiciliario solo puede consultar rutas asignadas a él (RN-EMP-05, CA-EMP-13).",
+        "operationId" : "obtenerRuta",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/RutaDetalleResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/api/v1/gestion/rutas/mias" : {
+      "get" : {
+        "tags" : [ "Domicilios y rutas" ],
+        "summary" : "Listar mis rutas asignadas",
+        "description" : "Devuelve las rutas asignadas al domiciliario autenticado para la fecha indicada (por defecto hoy) (RF-EMP-22, RN-EMP-05).",
+        "operationId" : "listarMisRutas",
+        "parameters" : [ {
+          "name" : "fecha",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/RutaDetalleResponse"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
     "/api/v1/gestion/public/sala/{sedeCodigo}" : {
       "get" : {
         "tags" : [ "Pantalla pública de sala" ],
@@ -1381,6 +1707,38 @@
         } ]
       }
     },
+    "/api/v1/gestion/domicilios/pendientes" : {
+      "get" : {
+        "tags" : [ "Domicilios y rutas" ],
+        "summary" : "Listar pedidos a domicilio listos para rutear",
+        "description" : "Devuelve los pedidos DOMICILIO en estado LISTO sin ruta activa de la sede, junto con las coordenadas de origen y los domiciliarios disponibles (RF-EMP-19).",
+        "operationId" : "listarPendientes",
+        "parameters" : [ {
+          "name" : "sedeId",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/DomiciliosPendientesResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
     "/api/v1/catalogo/sedes" : {
       "get" : {
         "tags" : [ "Catálogo público" ],
@@ -1524,6 +1882,131 @@
           },
           "telefono" : {
             "type" : "string"
+          }
+        }
+      },
+      "ReordenarRutaRequest" : {
+        "type" : "object",
+        "properties" : {
+          "paradaIds" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "format" : "uuid"
+            },
+            "minItems" : 1
+          }
+        },
+        "required" : [ "paradaIds" ]
+      },
+      "RutaDetalleResponse" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "sedeId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "sedeCodigo" : {
+            "type" : "string"
+          },
+          "sedeNombre" : {
+            "type" : "string"
+          },
+          "sedeDireccion" : {
+            "type" : "string"
+          },
+          "sedeLatitud" : {
+            "type" : "number"
+          },
+          "sedeLongitud" : {
+            "type" : "number"
+          },
+          "domiciliarioId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "domiciliarioNombre" : {
+            "type" : "string"
+          },
+          "fecha" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "estado" : {
+            "type" : "string",
+            "enum" : [ "PLANEADA", "EN_CURSO", "COMPLETADA" ]
+          },
+          "distanciaKm" : {
+            "type" : "number"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "paradas" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/RutaParadaResponse"
+            }
+          }
+        }
+      },
+      "RutaParadaResponse" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "pedidoId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "pedidoCodigo" : {
+            "type" : "string"
+          },
+          "orden" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "estado" : {
+            "type" : "string",
+            "enum" : [ "PENDIENTE", "ENTREGADA", "FALLIDA" ]
+          },
+          "distanciaKmDesdeAnterior" : {
+            "type" : "number"
+          },
+          "estadoPedido" : {
+            "type" : "string"
+          },
+          "intentosEntrega" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "pacienteNombre" : {
+            "type" : "string"
+          },
+          "pacienteDocumento" : {
+            "type" : "string"
+          },
+          "pacienteTelefono" : {
+            "type" : "string"
+          },
+          "direccionEntrega" : {
+            "type" : "string"
+          },
+          "latitudEntrega" : {
+            "type" : "number"
+          },
+          "longitudEntrega" : {
+            "type" : "number"
+          },
+          "esParcial" : {
+            "type" : "boolean"
           }
         }
       },
@@ -1679,6 +2162,9 @@
           "turno" : {
             "$ref" : "#/components/schemas/TurnoResponse"
           },
+          "ruta" : {
+            "$ref" : "#/components/schemas/RutaResumenPedidoResponse"
+          },
           "items" : {
             "type" : "array",
             "items" : {
@@ -1754,6 +2240,37 @@
           "estadoItem" : {
             "type" : "string",
             "enum" : [ "COMPLETO", "PARCIAL", "AGOTADO" ]
+          }
+        }
+      },
+      "RutaResumenPedidoResponse" : {
+        "type" : "object",
+        "properties" : {
+          "rutaId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "fecha" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "estadoRuta" : {
+            "type" : "string",
+            "enum" : [ "PLANEADA", "EN_CURSO", "COMPLETADA" ]
+          },
+          "orden" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "estadoParada" : {
+            "type" : "string",
+            "enum" : [ "PENDIENTE", "ENTREGADA", "FALLIDA" ]
+          },
+          "domiciliarioNombre" : {
+            "type" : "string"
+          },
+          "distanciaKmTotal" : {
+            "type" : "number"
           }
         }
       },
@@ -1970,6 +2487,45 @@
             "items" : {
               "$ref" : "#/components/schemas/DisponibilidadSedeItem"
             }
+          }
+        }
+      },
+      "CrearRutaRequest" : {
+        "type" : "object",
+        "properties" : {
+          "domiciliarioId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "pedidoIds" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "format" : "uuid"
+            },
+            "minItems" : 1
+          }
+        },
+        "required" : [ "domiciliarioId", "pedidoIds" ]
+      },
+      "ParadaFallidaRequest" : {
+        "type" : "object",
+        "properties" : {
+          "motivo" : {
+            "type" : "string",
+            "maxLength" : 500,
+            "minLength" : 0
+          }
+        },
+        "required" : [ "motivo" ]
+      },
+      "EntregarParadaRequest" : {
+        "type" : "object",
+        "properties" : {
+          "nota" : {
+            "type" : "string",
+            "maxLength" : 500,
+            "minLength" : 0
           }
         }
       },
@@ -2602,6 +3158,110 @@
           "totalElements" : {
             "type" : "integer",
             "format" : "int64"
+          }
+        }
+      },
+      "DomiciliarioResumenResponse" : {
+        "type" : "object",
+        "properties" : {
+          "usuarioId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "nombres" : {
+            "type" : "string"
+          },
+          "apellidos" : {
+            "type" : "string"
+          }
+        }
+      },
+      "DomiciliosPendientesResponse" : {
+        "type" : "object",
+        "properties" : {
+          "sedeId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "sedeCodigo" : {
+            "type" : "string"
+          },
+          "sedeNombre" : {
+            "type" : "string"
+          },
+          "sedeDireccion" : {
+            "type" : "string"
+          },
+          "sedeLatitud" : {
+            "type" : "number"
+          },
+          "sedeLongitud" : {
+            "type" : "number"
+          },
+          "maxParadas" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "maxIntentos" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "domiciliarios" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/DomiciliarioResumenResponse"
+            }
+          },
+          "pedidos" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/PedidoPendienteDomicilioResponse"
+            }
+          }
+        }
+      },
+      "PedidoPendienteDomicilioResponse" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "codigo" : {
+            "type" : "string"
+          },
+          "pacienteNombre" : {
+            "type" : "string"
+          },
+          "pacienteDocumento" : {
+            "type" : "string"
+          },
+          "pacienteTelefono" : {
+            "type" : "string"
+          },
+          "direccionEntrega" : {
+            "type" : "string"
+          },
+          "latitudEntrega" : {
+            "type" : "number"
+          },
+          "longitudEntrega" : {
+            "type" : "number"
+          },
+          "intentosEntrega" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "esParcial" : {
+            "type" : "boolean"
+          },
+          "expiraEn" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "listoEn" : {
+            "type" : "string",
+            "format" : "date-time"
           }
         }
       },

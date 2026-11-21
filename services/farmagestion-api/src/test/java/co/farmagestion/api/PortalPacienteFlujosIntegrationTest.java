@@ -87,6 +87,8 @@ class PortalPacienteFlujosIntegrationTest {
 		sedeCentroId = jdbcTemplate.queryForObject(
 				"SELECT id FROM sede WHERE codigo = 'SEDE-CENTRO'", UUID.class);
 		// Limpieza de datos transaccionales entre pruebas
+		jdbcTemplate.update("DELETE FROM ruta_parada");
+		jdbcTemplate.update("DELETE FROM ruta");
 		jdbcTemplate.update("DELETE FROM notificacion");
 		jdbcTemplate.update("DELETE FROM evento_integracion");
 		jdbcTemplate.update("DELETE FROM turno");

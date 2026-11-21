@@ -230,6 +230,31 @@ public class AuthService {
 		return empleadoRepository.findByUsuarioId(usuarioId).map(EmpleadoResumen::from);
 	}
 
+	@Transactional(readOnly = true)
+	public Optional<EmpleadoResumen> obtenerEmpleadoActivo(UUID usuarioId) {
+		return empleadoRepository.findEmpleadoActivoByUsuarioId(usuarioId).map(EmpleadoResumen::from);
+	}
+
+	@Transactional(readOnly = true)
+	public List<EmpleadoResumen> obtenerDomiciliariosActivosDeSede(UUID sedeId) {
+		return empleadoRepository.findActivosBySedeIdAndCargo(sedeId, CargoEmpleado.DOMICILIARIO)
+				.stream()
+				.map(EmpleadoResumen::from)
+				.toList();
+	}
+
+	@Transactional(readOnly = true)
+	public Map<UUID, EmpleadoResumen> obtenerEmpleadosPorIds(Collection<UUID> usuarioIds) {
+		if (usuarioIds == null || usuarioIds.isEmpty()) {
+			return Collections.emptyMap();
+		}
+		Map<UUID, EmpleadoResumen> mapa = new LinkedHashMap<>();
+		for (Empleado e : empleadoRepository.findAllByUsuarioIdIn(usuarioIds)) {
+			mapa.put(e.getUsuarioId(), EmpleadoResumen.from(e));
+		}
+		return mapa;
+	}
+
 	private PerfilPacienteResponse toPerfilResponse(Usuario usuario, Paciente paciente) {
 		return new PerfilPacienteResponse(
 				usuario.getId(),

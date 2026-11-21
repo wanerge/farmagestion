@@ -91,8 +91,15 @@ public class NotificacionesEventListener {
 			}
 			case LISTO -> {
 				tipo = "PEDIDO_LISTO";
-				titulo = "Pedido listo " + event.codigoPedido();
-				mensaje = "Tu pedido " + event.codigoPedido() + " está listo para entrega.";
+				if (event.estadoAnterior() == co.farmagestion.api.pedidos.EstadoPedido.EN_RUTA) {
+					titulo = "Intento de entrega fallido " + event.codigoPedido();
+					mensaje = "No pudimos entregar tu pedido " + event.codigoPedido()
+							+ ". Regresó a estado listo para un nuevo intento."
+							+ (event.nota() != null && !event.nota().isBlank() ? " " + event.nota() : "");
+				} else {
+					titulo = "Pedido listo " + event.codigoPedido();
+					mensaje = "Tu pedido " + event.codigoPedido() + " está listo para entrega.";
+				}
 			}
 			case EN_RUTA -> {
 				tipo = "PEDIDO_EN_RUTA";
