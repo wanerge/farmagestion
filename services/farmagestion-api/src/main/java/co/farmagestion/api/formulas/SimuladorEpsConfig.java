@@ -18,6 +18,7 @@ public class SimuladorEpsConfig {
 			@Value("${app.integracion.timeout-segundos:10}") int timeoutSegundos) {
 		Duration timeout = Duration.ofSeconds(Math.max(1, timeoutSegundos));
 		HttpClient httpClient = HttpClient.newBuilder()
+				.version(HttpClient.Version.HTTP_1_1)
 				.connectTimeout(timeout)
 				.build();
 		JdkClientHttpRequestFactory requestFactory = new JdkClientHttpRequestFactory(httpClient);
