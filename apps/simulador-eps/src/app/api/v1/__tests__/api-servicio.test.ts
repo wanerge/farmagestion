@@ -500,19 +500,25 @@ describe("Simulador EPS — API de servicio (CA-EPS-02 a CA-EPS-08)", () => {
       "http://localhost:3000/api/v1/formulas/FRM-2026-000001/pdf?documento=1000000001",
       { headers: { "X-API-Key": "clave-incorrecta" } }
     );
-    const resKeyInvalida = await getFormulaPdf(reqKeyInvalida);
+    const resKeyInvalida = await getFormulaPdf(reqKeyInvalida, {
+      params: Promise.resolve({ codigo: "FRM-2026-000001" }),
+    });
     expect(resKeyInvalida.status).toBe(401);
   });
 
-  it("GET /api/v1/formulas/{codigo}/pdf responde 501 con X-API-Key válida (P4)", async () => {
+  it("CA_EPS_09: GET /api/v1/formulas/{codigo}/pdf responde 200 application/pdf válido", async () => {
+    const formula = await crearFormulaPrueba();
     const req = new NextRequest(
-      "http://localhost:3000/api/v1/formulas/FRM-2026-000001/pdf?documento=1000000001",
+      `http://localhost:3000/api/v1/formulas/${formula.codigo}/pdf?documento=${pacienteDoc}`,
       { headers: { "X-API-Key": API_KEY } }
     );
-    const res = await getFormulaPdf(req);
-    expect(res.status).toBe(501);
-    const body = await res.json();
-    expect(body.code).toBe("NO_IMPLEMENTADO");
-    validarContraContrato("ProblemDetail", body);
+    const res = await getFormulaPdf(req, {
+      params: Promise.resolve({ codigo: formula.codigo }),
+    });
+    expect(res.status).toBe(200);
+    expect(res.headers.get("content-type")).toBe("application/pdf");
+    const buf = Buffer.from(await res.arrayBuffer());
+    expect(buf.subarray(0, 5).toString("ascii")).toBe("%PDF-");
+    expect(buf.length).toBeGreaterThan(500);
   });
 });

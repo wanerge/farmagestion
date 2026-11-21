@@ -100,12 +100,6 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetail"
-        "501":
-          description: Endpoint pendiente de implementación (P4)
-          content:
-            application/problem+json:
-              schema:
-                $ref: "#/components/schemas/ProblemDetail"
 
   /formulas/{codigo}/dispensaciones:
     post:
