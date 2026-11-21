@@ -38,4 +38,11 @@
 
 ## Comandos
 
-(P1 completa esta sección: levantar Postgres local, correr cada servicio, pruebas, build.)
+- **Postgres local:** `docker compose up -d` (bajar: `docker compose down`, limpiar volúmenes: `docker compose down -v`).
+- **Backend (`services/farmagestion-api`, puerto 8080):**
+  - Correr en local: `./mvnw spring-boot:run` (en Windows PowerShell: `.\mvnw.cmd spring-boot:run`)
+  - Pruebas y verificación: `./mvnw verify` (`.\mvnw.cmd verify`)
+  - Build Docker: `docker build -t farmagestion-api:local services/farmagestion-api`
+- **Simulador EPS (`apps/simulador-eps`, puerto 3000):** `npm run dev` | `npm run build` | `npm test`
+- **Portal del paciente (`apps/portal-paciente`, puerto 3001):** `npm run dev` | `npm run build`
+- **Panel de empleados (`apps/panel-empleados`, puerto 3002):** `npm run dev` | `npm run build`

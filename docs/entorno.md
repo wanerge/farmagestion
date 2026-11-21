@@ -2,16 +2,16 @@
 
 ## Plataformas
 
-| Plataforma | Cuenta dueña | Región                      |
-| ---------- | ------------ | --------------------------- |
-| GitHub     | <usuario>    | —                           |
-| Neon       | <correo>     | aws-us-east-1 (N. Virginia) |
-| Render     | <correo>     | virginia                    |
-| Vercel     | <correo>     | iad1                        |
+| Plataforma | Cuenta dueña                 | Región                      |
+| ---------- | ---------------------------- | --------------------------- |
+| GitHub     | wanerge                      | —                           |
+| Neon       | wanerge100@hotmail.com       | aws-us-east-1 (N. Virginia) |
+| Render     | wanerge100@hotmail.com       | virginia                    |
+| Vercel     | wanerge.almanzav@udea.edu.co | iad1                        |
 
 ## Neon
 
-- Proyecto: farmagestion
+- Proyecto: farmagestion (rama `production`, Postgres 18)
 - Bases: eps_db (rol eps_app), farma_db (rol farma_app)
 - Cadenas: guardadas en el gestor de contraseñas (EPS_POOLED, EPS_DIRECT, FARMA_DIRECT, FARMA_POOLED)
 
@@ -34,4 +34,4 @@
 ## Decisiones tomadas
 
 - Correo: no. Traslados: no.
-- Dueño del despliegue: <nombre>
+- Dueño del despliegue: wanerge
