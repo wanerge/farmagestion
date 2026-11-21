@@ -13,7 +13,9 @@ import {
   CLASE_ESTADO_PEDIDO,
   CLASE_ESTADO_TURNO,
   ETIQUETA_ESTADO_ITEM,
+  ETIQUETA_ESTADO_PARADA,
   ETIQUETA_ESTADO_PEDIDO,
+  ETIQUETA_ESTADO_RUTA,
   ETIQUETA_ESTADO_TURNO,
   ETIQUETA_MODALIDAD,
   esEstadoPedidoActivo,
@@ -27,6 +29,21 @@ import {
   type EstadoTurno,
   type ModalidadPedido,
 } from "@/lib/format";
+
+const PASOS_RECOGER: EstadoPedido[] = [
+  "RESERVADO",
+  "EN_PREPARACION",
+  "LISTO",
+  "ENTREGADO",
+];
+
+const PASOS_DOMICILIO: EstadoPedido[] = [
+  "RESERVADO",
+  "EN_PREPARACION",
+  "LISTO",
+  "EN_RUTA",
+  "ENTREGADO",
+];
 
 function ContenidoDetallePedido() {
   const params = useParams<{ id: string }>();
@@ -87,7 +104,9 @@ function ContenidoDetallePedido() {
       await refrescarNotificaciones();
       mostrarExito(
         "Pedido cancelado",
-        "La reserva fue liberada y tu turno pasó a estado cancelado."
+        pedido.modalidad === "DOMICILIO"
+          ? "La reserva fue liberada correctamente."
+          : "La reserva fue liberada y tu turno pasó a estado cancelado."
       );
     } catch (err) {
       setErrorCancelar(
@@ -237,6 +256,19 @@ function ContenidoDetallePedido() {
           </div>
         </div>
 
+        {estado === "EN_RUTA" && (
+          <div className="mt-4 rounded-xl border border-indigo-200 bg-indigo-50 p-3.5 text-xs text-indigo-950">
+            <p className="font-bold">Tu pedido está En ruta</p>
+            <p className="mt-0.5">
+              {pedido.ruta?.domiciliarioNombre
+                ? `${pedido.ruta.domiciliarioNombre} va en camino a tu dirección`
+                : "Nuestro domiciliario va en camino a tu dirección"}
+              {pedido.ruta?.orden ? ` (parada #${pedido.ruta.orden})` : ""}. No
+              es posible cancelar un pedido que ya está en ruta.
+            </p>
+          </div>
+        )}
+
         {estado === "VENCIDO" && (
           <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700">
             El tiempo límite de esta reserva venció y el stock fue liberado. Si
@@ -244,7 +276,110 @@ function ContenidoDetallePedido() {
             nuevo.
           </div>
         )}
+
+        {/* Seguimiento visual por pasos (incluye EN_RUTA para DOMICILIO) */}
+        {estado !== "CANCELADO" && estado !== "VENCIDO" && (
+          <div className="mt-5 border-t border-slate-100 pt-4">
+            <ol className="grid grid-cols-2 gap-2 sm:flex sm:items-center sm:justify-between">
+              {(modalidad === "DOMICILIO" ? PASOS_DOMICILIO : PASOS_RECOGER).map(
+                (paso, idx, arr) => {
+                  const indiceActual = arr.indexOf(estado);
+                  const completado = idx < indiceActual;
+                  const actual = idx === indiceActual;
+                  return (
+                    <li
+                      key={paso}
+                      className={`flex items-center gap-2 rounded-xl border px-3 py-2 text-xs font-semibold sm:flex-1 ${
+                        actual
+                          ? paso === "EN_RUTA"
+                            ? "border-indigo-400 bg-indigo-50 text-indigo-900"
+                            : "border-teal-500 bg-teal-50 text-teal-900"
+                          : completado
+                            ? "border-emerald-200 bg-emerald-50/50 text-emerald-800"
+                            : "border-slate-200 bg-slate-50 text-slate-400"
+                      }`}
+                    >
+                      <span
+                        className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold ${
+                          actual
+                            ? paso === "EN_RUTA"
+                              ? "bg-indigo-600 text-white"
+                              : "bg-teal-700 text-white"
+                            : completado
+                              ? "bg-emerald-600 text-white"
+                              : "bg-slate-200 text-slate-500"
+                        }`}
+                      >
+                        {completado ? "✓" : idx + 1}
+                      </span>
+                      <span className="truncate">
+                        {ETIQUETA_ESTADO_PEDIDO[paso]}
+                      </span>
+                    </li>
+                  );
+                }
+              )}
+            </ol>
+          </div>
+        )}
       </section>
+
+      {/* Tarjeta de domicilio y ruta (RF-PAC-12, RF-PAC-14, CA-PAC-10) */}
+      {modalidad === "DOMICILIO" && (
+        <section className="rounded-2xl border border-indigo-200 bg-indigo-50/50 p-5">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div className="space-y-1">
+              <p className="text-xs font-semibold tracking-wide text-indigo-800 uppercase">
+                Entrega a domicilio
+              </p>
+              <p className="text-sm font-bold text-slate-900">
+                {pedido.direccionEntrega || "Dirección registrada"}
+              </p>
+              {typeof pedido.latitudEntrega === "number" &&
+                typeof pedido.longitudEntrega === "number" && (
+                  <p className="font-mono text-[11px] text-slate-600">
+                    Ubicación: {pedido.latitudEntrega.toFixed(6)},{" "}
+                    {pedido.longitudEntrega.toFixed(6)}
+                  </p>
+                )}
+              {(pedido.intentosEntrega ?? 0) > 0 && (
+                <p className="text-xs text-amber-900">
+                  Intentos de entrega registrados:{" "}
+                  <strong>{pedido.intentosEntrega}</strong>
+                </p>
+              )}
+              {pedido.ruta && (
+                <div className="mt-2 rounded-xl border border-indigo-200/80 bg-white/80 p-3 text-xs text-slate-700">
+                  <p className="font-semibold text-indigo-950">
+                    {pedido.ruta.estadoRuta
+                      ? ETIQUETA_ESTADO_RUTA[pedido.ruta.estadoRuta]
+                      : "Ruta asignada"}
+                    {pedido.ruta.orden ? ` · Parada #${pedido.ruta.orden}` : ""}
+                  </p>
+                  {pedido.ruta.domiciliarioNombre && (
+                    <p className="mt-0.5">
+                      Domiciliario:{" "}
+                      <strong>{pedido.ruta.domiciliarioNombre}</strong>
+                    </p>
+                  )}
+                  <p className="mt-0.5 text-slate-500">
+                    Fecha: {formatearFecha(pedido.ruta.fecha)}
+                    {pedido.ruta.estadoParada
+                      ? ` · Parada: ${ETIQUETA_ESTADO_PARADA[pedido.ruta.estadoParada]}`
+                      : ""}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <span
+              className={`rounded-full border px-3 py-1 text-xs font-semibold ${CLASE_ESTADO_PEDIDO[estado]}`}
+            >
+              {ETIQUETA_ESTADO_PEDIDO[estado]}
+            </span>
+          </div>
+        </section>
+      )}
 
       {/* Tarjeta de turno (RF-PAC-11, RF-PAC-14) */}
       {pedido.turno && (
@@ -389,7 +524,11 @@ function ContenidoDetallePedido() {
       <Modal
         abierto={modalCancelar}
         titulo="Cancelar pedido"
-        descripcion="Al cancelar, las unidades reservadas se liberarán inmediatamente y tu turno quedará cancelado."
+        descripcion={
+          modalidad === "DOMICILIO"
+            ? "Al cancelar, las unidades reservadas se liberarán inmediatamente."
+            : "Al cancelar, las unidades reservadas se liberarán inmediatamente y tu turno quedará cancelado."
+        }
         onCerrar={() => setModalCancelar(false)}
       >
         <form onSubmit={manejarCancelar} className="space-y-4">

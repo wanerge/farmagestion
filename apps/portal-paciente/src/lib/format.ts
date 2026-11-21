@@ -169,7 +169,7 @@ export const CLASE_ESTADO_FORMULA: Record<EstadoFormula, string> = {
 export const ETIQUETA_ESTADO_PEDIDO: Record<EstadoPedido, string> = {
   RESERVADO: "Reservado",
   EN_PREPARACION: "En preparación",
-  LISTO: "Listo para recoger",
+  LISTO: "Listo para entrega",
   EN_RUTA: "En ruta",
   ENTREGADO: "Entregado",
   CANCELADO: "Cancelado",
@@ -217,6 +217,24 @@ export const CLASE_ESTADO_ITEM: Record<EstadoItemPedido, string> = {
 export const ETIQUETA_MODALIDAD: Record<ModalidadPedido, string> = {
   RECOGER: "Recoger en sede",
   DOMICILIO: "Domicilio",
+};
+
+export const ETIQUETA_ESTADO_RUTA: Record<
+  "PLANEADA" | "EN_CURSO" | "COMPLETADA",
+  string
+> = {
+  PLANEADA: "Ruta planeada",
+  EN_CURSO: "En curso",
+  COMPLETADA: "Completada",
+};
+
+export const ETIQUETA_ESTADO_PARADA: Record<
+  "PENDIENTE" | "ENTREGADA" | "FALLIDA",
+  string
+> = {
+  PENDIENTE: "Pendiente de entrega",
+  ENTREGADA: "Entregada",
+  FALLIDA: "Intento fallido",
 };
 
 export const TIPOS_DOCUMENTO = [

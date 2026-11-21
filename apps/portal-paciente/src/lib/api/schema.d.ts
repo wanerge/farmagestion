@@ -25,6 +25,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/gestion/rutas/{id}/orden": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Reordenar paradas de una ruta
+         * @description Reordena manualmente las paradas de una ruta PLANEADA y recalcula las distancias estimadas (RF-EMP-21).
+         */
+        put: operations["reordenarParadas"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/pacientes/me/pedidos": {
         parameters: {
             query?: never;
@@ -147,6 +167,90 @@ export interface paths {
          * @description Pasa el primer turno EN_ESPERA de la sede a LLAMADO y notifica al paciente (RF-EMP-16, CA-EMP-10).
          */
         post: operations["llamarSiguiente"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/gestion/rutas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Listar rutas de la sede
+         * @description Lista las rutas planeadas, en curso y completadas de la sede para la fecha indicada (por defecto hoy).
+         */
+        get: operations["listarRutas"];
+        put?: never;
+        /**
+         * Crear ruta de domicilio
+         * @description Crea una ruta PLANEADA ordenando los pedidos mediante vecino más cercano (Haversine) y una pasada de 2-opt, respetando domicilio.max_paradas (RF-EMP-20, RN-EMP-06, CA-EMP-11).
+         */
+        post: operations["crearRuta"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/gestion/rutas/{id}/paradas/{paradaId}/fallida": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Marcar parada como fallida
+         * @description Marca la parada FALLIDA con motivo, incrementa intentos_entrega y devuelve el pedido a LISTO o lo cancela liberando stock al alcanzar domicilio.max_intentos (RF-EMP-22, RF-EMP-23, RF-EMP-24, CA-EMP-12).
+         */
+        post: operations["marcarParadaFallida"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/gestion/rutas/{id}/paradas/{paradaId}/entregar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Marcar parada como entregada
+         * @description Marca la parada ENTREGADA, dispensa el stock del pedido, encola la dispensación al simulador y completa la ruta si no quedan paradas pendientes (RF-EMP-22, RF-EMP-24, RN-06).
+         */
+        post: operations["marcarParadaEntregada"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/gestion/rutas/{id}/iniciar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Iniciar ruta
+         * @description Pasa la ruta de PLANEADA a EN_CURSO, pasa todos sus pedidos a EN_RUTA y notifica a los pacientes (RF-EMP-21, CA-PAC-10).
+         */
+        post: operations["iniciarRuta"];
         delete?: never;
         options?: never;
         head?: never;
@@ -489,6 +593,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/gestion/rutas/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Consultar detalle de ruta
+         * @description Devuelve el detalle y paradas de una ruta. Un domiciliario solo puede consultar rutas asignadas a él (RN-EMP-05, CA-EMP-13).
+         */
+        get: operations["obtenerRuta"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/gestion/rutas/mias": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Listar mis rutas asignadas
+         * @description Devuelve las rutas asignadas al domiciliario autenticado para la fecha indicada (por defecto hoy) (RF-EMP-22, RN-EMP-05).
+         */
+        get: operations["listarMisRutas"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/gestion/public/sala/{sedeCodigo}": {
         parameters: {
             query?: never;
@@ -609,6 +753,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/gestion/domicilios/pendientes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Listar pedidos a domicilio listos para rutear
+         * @description Devuelve los pedidos DOMICILIO en estado LISTO sin ruta activa de la sede, junto con las coordenadas de origen y los domiciliarios disponibles (RF-EMP-19).
+         */
+        get: operations["listarPendientes"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/catalogo/sedes": {
         parameters: {
             query?: never;
@@ -688,6 +852,53 @@ export interface components {
             apellidos?: string;
             telefono?: string;
         };
+        ReordenarRutaRequest: {
+            paradaIds: string[];
+        };
+        RutaDetalleResponse: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            sedeId?: string;
+            sedeCodigo?: string;
+            sedeNombre?: string;
+            sedeDireccion?: string;
+            sedeLatitud?: number;
+            sedeLongitud?: number;
+            /** Format: uuid */
+            domiciliarioId?: string;
+            domiciliarioNombre?: string;
+            /** Format: date */
+            fecha?: string;
+            /** @enum {string} */
+            estado?: "PLANEADA" | "EN_CURSO" | "COMPLETADA";
+            distanciaKm?: number;
+            /** Format: date-time */
+            createdAt?: string;
+            paradas?: components["schemas"]["RutaParadaResponse"][];
+        };
+        RutaParadaResponse: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            pedidoId?: string;
+            pedidoCodigo?: string;
+            /** Format: int32 */
+            orden?: number;
+            /** @enum {string} */
+            estado?: "PENDIENTE" | "ENTREGADA" | "FALLIDA";
+            distanciaKmDesdeAnterior?: number;
+            estadoPedido?: string;
+            /** Format: int32 */
+            intentosEntrega?: number;
+            pacienteNombre?: string;
+            pacienteDocumento?: string;
+            pacienteTelefono?: string;
+            direccionEntrega?: string;
+            latitudEntrega?: number;
+            longitudEntrega?: number;
+            esParcial?: boolean;
+        };
         CrearPedidoRequest: {
             /** Format: uuid */
             formulaId: string;
@@ -749,6 +960,7 @@ export interface components {
             /** Format: date-time */
             entregadoEn?: string;
             turno?: components["schemas"]["TurnoResponse"];
+            ruta?: components["schemas"]["RutaResumenPedidoResponse"];
             items?: components["schemas"]["PedidoItemResponse"][];
             historial?: components["schemas"]["PedidoHistorialResponse"][];
         };
@@ -779,6 +991,20 @@ export interface components {
             cantidadEntregada?: number;
             /** @enum {string} */
             estadoItem?: "COMPLETO" | "PARCIAL" | "AGOTADO";
+        };
+        RutaResumenPedidoResponse: {
+            /** Format: uuid */
+            rutaId?: string;
+            /** Format: date */
+            fecha?: string;
+            /** @enum {string} */
+            estadoRuta?: "PLANEADA" | "EN_CURSO" | "COMPLETADA";
+            /** Format: int32 */
+            orden?: number;
+            /** @enum {string} */
+            estadoParada?: "PENDIENTE" | "ENTREGADA" | "FALLIDA";
+            domiciliarioNombre?: string;
+            distanciaKmTotal?: number;
         };
         TurnoResponse: {
             /** Format: uuid */
@@ -867,6 +1093,17 @@ export interface components {
             /** Format: int32 */
             cantidadPendiente?: number;
             disponibilidadPorSede?: components["schemas"]["DisponibilidadSedeItem"][];
+        };
+        CrearRutaRequest: {
+            /** Format: uuid */
+            domiciliarioId: string;
+            pedidoIds: string[];
+        };
+        ParadaFallidaRequest: {
+            motivo: string;
+        };
+        EntregarParadaRequest: {
+            nota?: string;
         };
         EntregarPedidoRequest: {
             documentoVerificado: string;
@@ -1117,6 +1354,45 @@ export interface components {
             /** Format: int64 */
             totalElements?: number;
         };
+        DomiciliarioResumenResponse: {
+            /** Format: uuid */
+            usuarioId?: string;
+            nombres?: string;
+            apellidos?: string;
+        };
+        DomiciliosPendientesResponse: {
+            /** Format: uuid */
+            sedeId?: string;
+            sedeCodigo?: string;
+            sedeNombre?: string;
+            sedeDireccion?: string;
+            sedeLatitud?: number;
+            sedeLongitud?: number;
+            /** Format: int32 */
+            maxParadas?: number;
+            /** Format: int32 */
+            maxIntentos?: number;
+            domiciliarios?: components["schemas"]["DomiciliarioResumenResponse"][];
+            pedidos?: components["schemas"]["PedidoPendienteDomicilioResponse"][];
+        };
+        PedidoPendienteDomicilioResponse: {
+            /** Format: uuid */
+            id?: string;
+            codigo?: string;
+            pacienteNombre?: string;
+            pacienteDocumento?: string;
+            pacienteTelefono?: string;
+            direccionEntrega?: string;
+            latitudEntrega?: number;
+            longitudEntrega?: number;
+            /** Format: int32 */
+            intentosEntrega?: number;
+            esParcial?: boolean;
+            /** Format: date-time */
+            expiraEn?: string;
+            /** Format: date-time */
+            listoEn?: string;
+        };
         SedePublicaResponse: {
             /** Format: uuid */
             id?: string;
@@ -1220,6 +1496,32 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["PerfilPacienteResponse"];
+                };
+            };
+        };
+    };
+    reordenarParadas: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReordenarRutaRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RutaDetalleResponse"];
                 };
             };
         };
@@ -1405,6 +1707,131 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["TurnoResponse"];
+                };
+            };
+        };
+    };
+    listarRutas: {
+        parameters: {
+            query?: {
+                sedeId?: string;
+                fecha?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RutaDetalleResponse"][];
+                };
+            };
+        };
+    };
+    crearRuta: {
+        parameters: {
+            query?: {
+                sedeId?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CrearRutaRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RutaDetalleResponse"];
+                };
+            };
+        };
+    };
+    marcarParadaFallida: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                paradaId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ParadaFallidaRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RutaDetalleResponse"];
+                };
+            };
+        };
+    };
+    marcarParadaEntregada: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                paradaId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["EntregarParadaRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RutaDetalleResponse"];
+                };
+            };
+        };
+    };
+    iniciarRuta: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RutaDetalleResponse"];
                 };
             };
         };
@@ -1826,6 +2253,50 @@ export interface operations {
             };
         };
     };
+    obtenerRuta: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RutaDetalleResponse"];
+                };
+            };
+        };
+    };
+    listarMisRutas: {
+        parameters: {
+            query?: {
+                fecha?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RutaDetalleResponse"][];
+                };
+            };
+        };
+    };
     consultarSala: {
         parameters: {
             query?: {
@@ -1975,6 +2446,28 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["PaginaResponseMovimientoKardexResponse"];
+                };
+            };
+        };
+    };
+    listarPendientes: {
+        parameters: {
+            query?: {
+                sedeId?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["DomiciliosPendientesResponse"];
                 };
             };
         };

@@ -33,6 +33,7 @@ export type PedidoDetalle = Schemas["PedidoDetalleResponse"];
 export type PedidoItem = Schemas["PedidoItemResponse"];
 export type PedidoHistorial = Schemas["PedidoHistorialResponse"];
 export type Turno = Schemas["TurnoResponse"];
+export type RutaResumenPedido = Schemas["RutaResumenPedidoResponse"];
 export type NotaOpcionalRequest = Schemas["NotaOpcionalRequest"];
 
 export type Notificacion = Schemas["NotificacionResponse"];

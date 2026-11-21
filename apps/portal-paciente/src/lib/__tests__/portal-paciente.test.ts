@@ -451,6 +451,89 @@ describe("Portal del paciente · Cliente OpenAPI, errores problem+json y flujos 
     expect(resultado.blob.size).toBe(pdfBytes.byteLength);
   });
 
+  it("CA_PAC_10 · pedido DOMICILIO con dirección y coordenadas muestra EN_RUTA con ruta asignada y no permite cancelar", async () => {
+    const pedidoId = "d0000000-0000-0000-0000-000000000010";
+    let bodyEnviado: unknown = null;
+
+    const mockFetch = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input);
+      if (url.endsWith("/api/v1/pacientes/me/pedidos") && init?.method === "POST") {
+        bodyEnviado = JSON.parse(String(init.body));
+        return jsonResponse(
+          {
+            id: pedidoId,
+            codigo: "PED-2026-000050",
+            estado: "RESERVADO",
+            modalidad: "DOMICILIO",
+            direccionEntrega: "Carrera 43A # 10-25, Medellín",
+            latitudEntrega: 6.21025,
+            longitudEntrega: -75.5712,
+            items: [],
+            historial: [],
+          },
+          201
+        );
+      }
+      if (url.endsWith(`/api/v1/pacientes/me/pedidos/${pedidoId}`)) {
+        return jsonResponse({
+          id: pedidoId,
+          codigo: "PED-2026-000050",
+          estado: "EN_RUTA",
+          modalidad: "DOMICILIO",
+          direccionEntrega: "Carrera 43A # 10-25, Medellín",
+          latitudEntrega: 6.21025,
+          longitudEntrega: -75.5712,
+          intentosEntrega: 0,
+          ruta: {
+            rutaId: "r0000000-0000-0000-0000-000000000001",
+            fecha: "2026-11-21",
+            estadoRuta: "EN_CURSO",
+            orden: 2,
+            estadoParada: "PENDIENTE",
+            domiciliarioNombre: "Andrés Mejía",
+            distanciaKmTotal: 4.35,
+          },
+          items: [],
+          historial: [
+            { estadoAnterior: "LISTO", estadoNuevo: "EN_RUTA" },
+          ],
+        });
+      }
+      throw new Error(`URL inesperada: ${url}`);
+    }) as unknown as typeof fetch;
+
+    const creado = await portalApi.crearPedido(
+      {
+        formulaId: "6a0f0000-0000-0000-0000-000000000001",
+        sedeId: "b41c0000-0000-0000-0000-000000000001",
+        modalidad: "DOMICILIO",
+        direccionEntrega: "Carrera 43A # 10-25, Medellín",
+        latitudEntrega: 6.21025,
+        longitudEntrega: -75.5712,
+        aceptaParcial: false,
+        items: [{ medicamentoId: "e8a20000-0000-0000-0000-000000000001", cantidad: 10 }],
+      },
+      { token: "jwt-pac", fetchImpl: mockFetch }
+    );
+
+    expect(creado.modalidad).toBe("DOMICILIO");
+    expect(bodyEnviado).toMatchObject({
+      modalidad: "DOMICILIO",
+      direccionEntrega: "Carrera 43A # 10-25, Medellín",
+      latitudEntrega: 6.21025,
+      longitudEntrega: -75.5712,
+    });
+
+    const detalleEnRuta = await portalApi.obtenerDetallePedido(pedidoId, {
+      token: "jwt-pac",
+      fetchImpl: mockFetch,
+    });
+    expect(detalleEnRuta.estado).toBe("EN_RUTA");
+    expect(detalleEnRuta.ruta?.estadoRuta).toBe("EN_CURSO");
+    expect(detalleEnRuta.ruta?.domiciliarioNombre).toBe("Andrés Mejía");
+    expect(puedeCancelarPedidoPaciente(detalleEnRuta.estado)).toBe(false);
+  });
+
   it("activa 'Despertando el servicio…' tras 5 s, maneja 401 y valida rol PACIENTE", async () => {
     // Validación de rol PACIENTE en sesión
     const sesionPaciente = crearSesionDesdeAuth({

@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useApp } from "@/components/AppProvider";
@@ -23,8 +24,21 @@ import {
   fechaMananaBogota,
   formatearFecha,
   formatearHora,
+  type ModalidadPedido,
   type NivelDisponibilidad,
 } from "@/lib/format";
+
+const MapaSeleccionUbicacionLeaflet = dynamic(
+  () => import("@/components/MapaSeleccionUbicacionLeaflet"),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex h-72 items-center justify-center rounded-xl border border-slate-200 bg-slate-100 text-xs text-slate-500 sm:h-80">
+        Cargando mapa para ubicar tu domicilio…
+      </div>
+    ),
+  }
+);
 
 interface ItemSeleccionado {
   seleccionado: boolean;
@@ -52,9 +66,15 @@ function ContenidoNuevoPedido() {
   const [cargandoFormula, setCargandoFormula] = useState(false);
 
   const [sedeId, setSedeId] = useState<string>(sedeIdParam);
+  const [modalidad, setModalidad] = useState<ModalidadPedido>("RECOGER");
   const [seleccionItems, setSeleccionItems] = useState<
     Record<string, ItemSeleccionado>
   >({});
+
+  // Campos exclusivos de modalidad DOMICILIO (RF-PAC-12)
+  const [direccionEntrega, setDireccionEntrega] = useState("");
+  const [latitudEntrega, setLatitudEntrega] = useState<number | null>(null);
+  const [longitudEntrega, setLongitudEntrega] = useState<number | null>(null);
 
   const fechaHoy = useMemo(() => fechaHoyBogota(), []);
   const fechaManana = useMemo(() => fechaMananaBogota(), []);
@@ -166,7 +186,7 @@ function ContenidoNuevoPedido() {
 
   // Cargar franjas horarias con cupo para la sede y fecha elegidas (RF-PAC-11, RN-PAC-05)
   const cargarFranjas = useCallback(async () => {
-    if (!token || !sedeId || !fechaTurno) {
+    if (modalidad !== "RECOGER" || !token || !sedeId || !fechaTurno) {
       setFranjasData(null);
       setFranjaInicio("");
       return;
@@ -197,7 +217,7 @@ function ContenidoNuevoPedido() {
     } finally {
       setCargandoFranjas(false);
     }
-  }, [token, sedeId, fechaTurno]);
+  }, [modalidad, token, sedeId, fechaTurno]);
 
   useEffect(() => {
     const id = window.setTimeout(() => {
@@ -245,6 +265,17 @@ function ContenidoNuevoPedido() {
     return (disp?.nivel as NivelDisponibilidad) ?? null;
   };
 
+  const sedeSeleccionada = useMemo(
+    () => sedes.find((s) => s.id === sedeId) ?? null,
+    [sedes, sedeId]
+  );
+
+  const manejarSeleccionUbicacion = useCallback((lat: number, lon: number) => {
+    setLatitudEntrega(lat);
+    setLongitudEntrega(lon);
+    setErrorForm(null);
+  }, []);
+
   const enviarPedido = async (aceptaParcial: boolean) => {
     if (!token) return;
     setErrorForm(null);
@@ -254,40 +285,68 @@ function ContenidoNuevoPedido() {
       return;
     }
     if (!sedeId) {
-      setErrorForm("Selecciona una sede para recoger tu pedido.");
+      setErrorForm("Selecciona una sede para tu pedido.");
       return;
     }
     if (itemsParaEnviar.length === 0) {
       setErrorForm("Selecciona al menos un medicamento con cantidad mayor a cero.");
       return;
     }
-    if (!franjaInicio) {
+    if (modalidad === "RECOGER" && !franjaInicio) {
       setErrorForm(
         "Selecciona una franja horaria con cupo disponible (hoy o mañana)."
       );
       return;
     }
+    if (modalidad === "DOMICILIO") {
+      if (!direccionEntrega.trim()) {
+        setErrorForm("Ingresa la dirección de entrega en texto.");
+        return;
+      }
+      if (latitudEntrega === null || longitudEntrega === null) {
+        setErrorForm(
+          "Marca tu ubicación de entrega haciendo clic en el mapa."
+        );
+        return;
+      }
+    }
 
     setEnviando(true);
     try {
-      const creado = await portalApi.crearPedido(
-        {
-          formulaId,
-          sedeId,
-          modalidad: "RECOGER",
-          franjaInicio,
-          aceptaParcial,
-          items: itemsParaEnviar,
-        },
-        { token, notifyGlobalError: false }
-      );
+      const payload =
+        modalidad === "RECOGER"
+          ? {
+              formulaId,
+              sedeId,
+              modalidad: "RECOGER" as const,
+              franjaInicio,
+              aceptaParcial,
+              items: itemsParaEnviar,
+            }
+          : {
+              formulaId,
+              sedeId,
+              modalidad: "DOMICILIO" as const,
+              direccionEntrega: direccionEntrega.trim(),
+              latitudEntrega: latitudEntrega!,
+              longitudEntrega: longitudEntrega!,
+              aceptaParcial,
+              items: itemsParaEnviar,
+            };
+
+      const creado = await portalApi.crearPedido(payload, {
+        token,
+        notifyGlobalError: false,
+      });
       setModalFaltanteAbierto(false);
       await refrescarNotificaciones();
       mostrarExito(
         creado.esParcial ? "Pedido parcial reservado" : "Pedido reservado",
-        creado.turno?.codigo
-          ? `Código ${creado.codigo} · Turno asignado: ${creado.turno.codigo}.`
-          : `Código ${creado.codigo} creado correctamente.`
+        creado.modalidad === "DOMICILIO"
+          ? `Código ${creado.codigo} · Envío a domicilio registrado correctamente.`
+          : creado.turno?.codigo
+            ? `Código ${creado.codigo} · Turno asignado: ${creado.turno.codigo}.`
+            : `Código ${creado.codigo} creado correctamente.`
       );
       router.replace(`/pedidos/${creado.id}`);
     } catch (err) {
@@ -358,11 +417,14 @@ function ContenidoNuevoPedido() {
             ← Volver a mis pedidos
           </Link>
           <h1 className="mt-1 text-xl font-bold text-slate-900 sm:text-2xl">
-            Nuevo pedido · Recoger en sede
+            {modalidad === "RECOGER"
+              ? "Nuevo pedido · Recoger en sede"
+              : "Nuevo pedido · Envío a domicilio"}
           </h1>
           <p className="mt-0.5 text-sm text-slate-600">
-            Reserva tus medicamentos y agenda una franja horaria con turno sin
-            hacer filas.
+            {modalidad === "RECOGER"
+              ? "Reserva tus medicamentos y agenda una franja horaria con turno sin hacer filas."
+              : "Reserva tus medicamentos e indica tu dirección y ubicación en el mapa para recibirlos a domicilio."}
           </p>
         </div>
       </div>
@@ -395,17 +457,73 @@ function ContenidoNuevoPedido() {
         </select>
       </section>
 
-      {/* Paso 2: Sede */}
+      {/* Paso 2: Sede y modalidad (RF-PAC-10, RF-PAC-11, RF-PAC-12) */}
       <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs">
         <h2 className="text-sm font-bold text-slate-900 sm:text-base">
-          2. Elige la sede para recoger
+          2. Elige la sede y la modalidad de entrega
         </h2>
-        <p className="mt-0.5 text-xs text-slate-500">
-          Modalidad habilitada: <strong>Recoger en sede</strong> con turno
-          asignado.
+
+        <div className="mt-3 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+          <button
+            type="button"
+            onClick={() => {
+              setModalidad("RECOGER");
+              setErrorForm(null);
+            }}
+            className={`rounded-xl border p-3.5 text-left transition ${
+              modalidad === "RECOGER"
+                ? "border-teal-600 bg-teal-50/70 ring-2 ring-teal-500/20"
+                : "border-slate-200 bg-white hover:border-teal-300"
+            }`}
+          >
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-sm font-bold text-slate-900">
+                Recoger en sede
+              </span>
+              {modalidad === "RECOGER" && (
+                <span className="rounded-full bg-teal-700 px-2 py-0.5 text-[10px] font-bold text-white">
+                  Activa
+                </span>
+              )}
+            </div>
+            <p className="mt-1 text-xs text-slate-600">
+              Agenda una franja horaria hoy o mañana y recibe tu código de turno.
+            </p>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setModalidad("DOMICILIO");
+              setErrorForm(null);
+            }}
+            className={`rounded-xl border p-3.5 text-left transition ${
+              modalidad === "DOMICILIO"
+                ? "border-indigo-600 bg-indigo-50/70 ring-2 ring-indigo-500/20"
+                : "border-slate-200 bg-white hover:border-indigo-300"
+            }`}
+          >
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-sm font-bold text-slate-900">
+                Envío a domicilio
+              </span>
+              {modalidad === "DOMICILIO" && (
+                <span className="rounded-full bg-indigo-600 px-2 py-0.5 text-[10px] font-bold text-white">
+                  Activa
+                </span>
+              )}
+            </div>
+            <p className="mt-1 text-xs text-slate-600">
+              Indica tu dirección y marca el punto de entrega en el mapa.
+            </p>
+          </button>
+        </div>
+
+        <p className="mt-4 text-xs font-semibold text-slate-700">
+          Sede que atenderá tu pedido:
         </p>
 
-        <div className="mt-3 grid grid-cols-1 gap-2.5 sm:grid-cols-3">
+        <div className="mt-2 grid grid-cols-1 gap-2.5 sm:grid-cols-3">
           {sedes.map((sede) => {
             const seleccionada = sede.id === sedeId;
             return (
@@ -549,7 +667,8 @@ function ContenidoNuevoPedido() {
         )}
       </section>
 
-      {/* Paso 4: Fecha y franja horaria (RF-PAC-11, RN-PAC-05) */}
+      {/* Paso 4: Franja horaria (RECOGER) o Dirección y mapa (DOMICILIO) */}
+      {modalidad === "RECOGER" ? (
       <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
@@ -659,6 +778,66 @@ function ContenidoNuevoPedido() {
           )}
         </div>
       </section>
+      ) : (
+      <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs">
+        <h2 className="text-sm font-bold text-slate-900 sm:text-base">
+          4. Dirección y ubicación de entrega
+        </h2>
+        <p className="mt-0.5 text-xs text-slate-500">
+          Escribe tu dirección completa y haz clic en el mapa para marcar el
+          punto exacto de entrega (sin geocodificación automática).
+        </p>
+
+        <div className="mt-4 space-y-4">
+          <div>
+            <label
+              htmlFor="direccion-entrega"
+              className="block text-xs font-semibold text-slate-700"
+            >
+              Dirección de entrega (obligatoria)
+            </label>
+            <input
+              id="direccion-entrega"
+              type="text"
+              maxLength={255}
+              value={direccionEntrega}
+              onChange={(e) => setDireccionEntrega(e.target.value)}
+              placeholder="Ej. Carrera 43A # 10-25, Apto 402, Medellín"
+              className="mt-1.5 w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <span className="text-xs font-semibold text-slate-700">
+                Ubicación en el mapa (haz clic o arrastra el marcador ★)
+              </span>
+              {latitudEntrega !== null && longitudEntrega !== null ? (
+                <span className="rounded-full bg-indigo-50 px-2.5 py-0.5 font-mono text-[11px] font-semibold text-indigo-800">
+                  {latitudEntrega.toFixed(6)}, {longitudEntrega.toFixed(6)}
+                </span>
+              ) : (
+                <span className="text-[11px] text-amber-800">
+                  Pendiente de marcar en el mapa
+                </span>
+              )}
+            </div>
+
+            <MapaSeleccionUbicacionLeaflet
+              sede={sedeSeleccionada}
+              latitud={latitudEntrega}
+              longitud={longitudEntrega}
+              onSeleccionarUbicacion={manejarSeleccionUbicacion}
+            />
+
+            <p className="text-[11px] text-slate-500">
+              El marcador verde (S) indica la sede elegida. Haz clic sobre tu
+              ubicación en el mapa para fijar las coordenadas de entrega.
+            </p>
+          </div>
+        </div>
+      </section>
+      )}
 
       {/* Confirmación */}
       <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -672,14 +851,25 @@ function ContenidoNuevoPedido() {
         <button
           type="button"
           disabled={
-            enviando || itemsParaEnviar.length === 0 || !franjaInicio || !sedeId
+            enviando ||
+            itemsParaEnviar.length === 0 ||
+            !sedeId ||
+            (modalidad === "RECOGER"
+              ? !franjaInicio
+              : !direccionEntrega.trim() ||
+                latitudEntrega === null ||
+                longitudEntrega === null)
           }
           onClick={() => void enviarPedido(false)}
           className="rounded-xl bg-teal-700 px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-teal-800 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {enviando
-            ? "Reservando stock y generando turno…"
-            : "Confirmar pedido y generar turno"}
+            ? modalidad === "RECOGER"
+              ? "Reservando stock y generando turno…"
+              : "Reservando stock para domicilio…"
+            : modalidad === "RECOGER"
+              ? "Confirmar pedido y generar turno"
+              : "Confirmar pedido a domicilio"}
         </button>
       </div>
 
