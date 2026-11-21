@@ -10,6 +10,12 @@
     "description" : "Generated server url"
   } ],
   "tags" : [ {
+    "name" : "Administración",
+    "description" : "Gestión administrativa de sedes, empleados, catálogo, parámetros y outbox (solo ADMIN, RF-EMP-30 a RF-EMP-34)"
+  }, {
+    "name" : "Reportes",
+    "description" : "Consultas agregadas por sede y rango de fechas (RF-EMP-28, RF-EMP-29, CA-EMP-14)"
+  }, {
     "name" : "Turnos del paciente",
     "description" : "Consulta de franjas horarias con cupo para recoger en sede (RF-PAC-11, RN-PAC-05)"
   }, {
@@ -135,6 +141,233 @@
               "*/*" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/RutaDetalleResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/api/v1/gestion/admin/sedes/{id}" : {
+      "put" : {
+        "tags" : [ "Administración" ],
+        "summary" : "Actualizar sede",
+        "description" : "Edita los datos, horario, coordenadas o estado activo de una sede (RF-EMP-30).",
+        "operationId" : "actualizarSede",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ActualizarSedeRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SedeAdminResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/api/v1/gestion/admin/parametros" : {
+      "get" : {
+        "tags" : [ "Administración" ],
+        "summary" : "Listar parámetros del sistema",
+        "description" : "Devuelve todos los parámetros configurables de 00 §6.3 (RF-EMP-33).",
+        "operationId" : "listarParametros",
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/ParametroResponse"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      },
+      "put" : {
+        "tags" : [ "Administración" ],
+        "summary" : "Actualizar parámetros en lote",
+        "description" : "Actualiza el valor de uno o varios parámetros de 00 §6.3 (RF-EMP-33).",
+        "operationId" : "actualizarParametros",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ActualizarParametrosRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/ParametroResponse"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/api/v1/gestion/admin/parametros/{clave}" : {
+      "put" : {
+        "tags" : [ "Administración" ],
+        "summary" : "Actualizar parámetro individual",
+        "description" : "Actualiza el valor de un parámetro específico por su clave (RF-EMP-33).",
+        "operationId" : "actualizarParametro",
+        "parameters" : [ {
+          "name" : "clave",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ActualizarParametroRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ParametroResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/api/v1/gestion/admin/medicamentos/{id}" : {
+      "put" : {
+        "tags" : [ "Administración" ],
+        "summary" : "Actualizar medicamento",
+        "description" : "Edita los datos o desactiva/activa un medicamento del catálogo (RF-EMP-32).",
+        "operationId" : "actualizarMedicamento",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ActualizarMedicamentoRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/MedicamentoAdminResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/api/v1/gestion/admin/empleados/{id}" : {
+      "put" : {
+        "tags" : [ "Administración" ],
+        "summary" : "Actualizar empleado",
+        "description" : "Edita cargo, sede, correo, contraseña opcional o estado activo de un empleado (RF-EMP-31).",
+        "operationId" : "actualizarEmpleado",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ActualizarEmpleadoRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/EmpleadoAdminResponse"
                 }
               }
             }
@@ -940,6 +1173,239 @@
         } ]
       }
     },
+    "/api/v1/gestion/admin/sedes" : {
+      "get" : {
+        "tags" : [ "Administración" ],
+        "summary" : "Listar todas las sedes",
+        "description" : "Lista todas las sedes (activas e inactivas) para administración (RF-EMP-30).",
+        "operationId" : "listarSedes",
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/SedeAdminResponse"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      },
+      "post" : {
+        "tags" : [ "Administración" ],
+        "summary" : "Crear sede",
+        "description" : "Crea una nueva sede con horario y coordenadas (RF-EMP-30).",
+        "operationId" : "crearSede",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CrearSedeRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Created",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SedeAdminResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/api/v1/gestion/admin/medicamentos" : {
+      "get" : {
+        "tags" : [ "Administración" ],
+        "summary" : "Listar catálogo de medicamentos",
+        "description" : "Lista paginada del catálogo de medicamentos (activos e inactivos) con búsqueda (RF-EMP-32).",
+        "operationId" : "listarMedicamentos",
+        "parameters" : [ {
+          "name" : "q",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "activo",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean"
+          }
+        }, {
+          "name" : "page",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 0
+          }
+        }, {
+          "name" : "size",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 50
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PaginaResponseMedicamentoAdminResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      },
+      "post" : {
+        "tags" : [ "Administración" ],
+        "summary" : "Crear medicamento",
+        "description" : "Crea un medicamento en el catálogo y genera automáticamente registros de inventario en cero para cada sede activa (RF-EMP-32).",
+        "operationId" : "crearMedicamento",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CrearMedicamentoRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Created",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/MedicamentoAdminResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/api/v1/gestion/admin/integracion/eventos/{id}/reintentar" : {
+      "post" : {
+        "tags" : [ "Administración" ],
+        "summary" : "Reintentar manualmente evento de integración",
+        "description" : "Reencola y reintenta de inmediato un evento de integración en estado ERROR o PENDIENTE (RF-EMP-34).",
+        "operationId" : "reintentarEvento",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/EventoIntegracionResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/api/v1/gestion/admin/empleados" : {
+      "get" : {
+        "tags" : [ "Administración" ],
+        "summary" : "Listar empleados",
+        "description" : "Lista todas las cuentas de empleados y administradores con cargo, sede y estado (RF-EMP-31).",
+        "operationId" : "listarEmpleados",
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/EmpleadoAdminResponse"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      },
+      "post" : {
+        "tags" : [ "Administración" ],
+        "summary" : "Crear empleado",
+        "description" : "Crea una cuenta de empleado con cargo y sede asignada (RF-EMP-31).",
+        "operationId" : "crearEmpleado",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CrearEmpleadoRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Created",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/EmpleadoAdminResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
     "/api/v1/auth/registro" : {
       "post" : {
         "tags" : [ "Autenticación" ],
@@ -1365,6 +1831,198 @@
         } ]
       }
     },
+    "/api/v1/gestion/reportes/turnos" : {
+      "get" : {
+        "tags" : [ "Reportes" ],
+        "summary" : "Reporte de turnos por franja",
+        "description" : "Agrega turnos atendidos y por estado agrupados por franja horaria (RF-EMP-28).",
+        "operationId" : "reporteTurnos",
+        "parameters" : [ {
+          "name" : "sedeId",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "name" : "desde",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        }, {
+          "name" : "hasta",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ReporteTurnosResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/api/v1/gestion/reportes/tiempos" : {
+      "get" : {
+        "tags" : [ "Reportes" ],
+        "summary" : "Reporte de tiempos de preparación y entrega",
+        "description" : "Calcula tiempos promedio de preparación (RESERVADO -> LISTO) y entrega (LISTO -> ENTREGADO) en minutos (RF-EMP-28, CA-EMP-14).",
+        "operationId" : "reporteTiempos",
+        "parameters" : [ {
+          "name" : "sedeId",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "name" : "desde",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        }, {
+          "name" : "hasta",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ReporteTiemposResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/api/v1/gestion/reportes/pedidos" : {
+      "get" : {
+        "tags" : [ "Reportes" ],
+        "summary" : "Reporte de pedidos por estado y por día",
+        "description" : "Agrega pedidos por estado y atendidos por día en el rango de fechas indicado (RF-EMP-28).",
+        "operationId" : "reportePedidos",
+        "parameters" : [ {
+          "name" : "sedeId",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "name" : "desde",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        }, {
+          "name" : "hasta",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ReportePedidosResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/api/v1/gestion/reportes/faltantes" : {
+      "get" : {
+        "tags" : [ "Reportes" ],
+        "summary" : "Ranking de medicamentos agotados o con más faltantes",
+        "description" : "Lista el ranking de medicamentos con faltantes en pedidos del rango o agotados en inventario (RF-EMP-28).",
+        "operationId" : "reporteFaltantes",
+        "parameters" : [ {
+          "name" : "sedeId",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "name" : "desde",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        }, {
+          "name" : "hasta",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ReporteFaltantesResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
     "/api/v1/gestion/public/sala/{sedeCodigo}" : {
       "get" : {
         "tags" : [ "Pantalla pública de sala" ],
@@ -1739,12 +2397,62 @@
         } ]
       }
     },
+    "/api/v1/gestion/admin/integracion/eventos" : {
+      "get" : {
+        "tags" : [ "Administración" ],
+        "summary" : "Consultar eventos del outbox de integración",
+        "description" : "Lista paginada de eventos de integración con filtro opcional por estado (PENDIENTE, ENVIADO, ERROR) (RF-EMP-34).",
+        "operationId" : "listarEventos",
+        "parameters" : [ {
+          "name" : "estado",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "enum" : [ "PENDIENTE", "ENVIADO", "ERROR" ]
+          }
+        }, {
+          "name" : "page",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 0
+          }
+        }, {
+          "name" : "size",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 20
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PaginaResponseEventoIntegracionResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
     "/api/v1/catalogo/sedes" : {
       "get" : {
         "tags" : [ "Catálogo público" ],
         "summary" : "Listar sedes activas",
         "description" : "Retorna las sedes activas con dirección, horario y coordenadas para mapa (RF-PAC-05).",
-        "operationId" : "listarSedes",
+        "operationId" : "listarSedes_1",
         "responses" : {
           "200" : {
             "description" : "OK",
@@ -2007,6 +2715,274 @@
           },
           "esParcial" : {
             "type" : "boolean"
+          }
+        }
+      },
+      "ActualizarSedeRequest" : {
+        "type" : "object",
+        "properties" : {
+          "codigo" : {
+            "type" : "string",
+            "maxLength" : 32,
+            "minLength" : 0
+          },
+          "nombre" : {
+            "type" : "string",
+            "maxLength" : 150,
+            "minLength" : 0
+          },
+          "direccion" : {
+            "type" : "string",
+            "maxLength" : 255,
+            "minLength" : 0
+          },
+          "latitud" : {
+            "type" : "number",
+            "maximum" : 90.0,
+            "minimum" : -90.0
+          },
+          "longitud" : {
+            "type" : "number",
+            "maximum" : 180.0,
+            "minimum" : -180.0
+          },
+          "horaApertura" : {
+            "type" : "string",
+            "format" : "time-local"
+          },
+          "horaCierre" : {
+            "type" : "string",
+            "format" : "time-local"
+          },
+          "activa" : {
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "activa", "codigo", "direccion", "horaApertura", "horaCierre", "latitud", "longitud", "nombre" ]
+      },
+      "SedeAdminResponse" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "codigo" : {
+            "type" : "string"
+          },
+          "nombre" : {
+            "type" : "string"
+          },
+          "direccion" : {
+            "type" : "string"
+          },
+          "latitud" : {
+            "type" : "number"
+          },
+          "longitud" : {
+            "type" : "number"
+          },
+          "horaApertura" : {
+            "type" : "string",
+            "format" : "time-local"
+          },
+          "horaCierre" : {
+            "type" : "string",
+            "format" : "time-local"
+          },
+          "activa" : {
+            "type" : "boolean"
+          }
+        }
+      },
+      "ActualizarParametrosRequest" : {
+        "type" : "object",
+        "properties" : {
+          "parametros" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ParametroValorItem"
+            },
+            "minItems" : 1
+          }
+        },
+        "required" : [ "parametros" ]
+      },
+      "ParametroValorItem" : {
+        "type" : "object",
+        "properties" : {
+          "clave" : {
+            "type" : "string",
+            "minLength" : 1
+          },
+          "valor" : {
+            "type" : "string",
+            "maxLength" : 255,
+            "minLength" : 0
+          }
+        },
+        "required" : [ "clave", "valor" ]
+      },
+      "ParametroResponse" : {
+        "type" : "object",
+        "properties" : {
+          "clave" : {
+            "type" : "string"
+          },
+          "valor" : {
+            "type" : "string"
+          },
+          "descripcion" : {
+            "type" : "string"
+          }
+        }
+      },
+      "ActualizarParametroRequest" : {
+        "type" : "object",
+        "properties" : {
+          "valor" : {
+            "type" : "string",
+            "maxLength" : 255,
+            "minLength" : 0
+          }
+        },
+        "required" : [ "valor" ]
+      },
+      "ActualizarMedicamentoRequest" : {
+        "type" : "object",
+        "properties" : {
+          "codigo" : {
+            "type" : "string",
+            "maxLength" : 32,
+            "minLength" : 0
+          },
+          "nombre" : {
+            "type" : "string",
+            "maxLength" : 200,
+            "minLength" : 0
+          },
+          "principioActivo" : {
+            "type" : "string",
+            "maxLength" : 200,
+            "minLength" : 0
+          },
+          "presentacion" : {
+            "type" : "string",
+            "maxLength" : 200,
+            "minLength" : 0
+          },
+          "activo" : {
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "activo", "codigo", "nombre", "presentacion", "principioActivo" ]
+      },
+      "MedicamentoAdminResponse" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "codigo" : {
+            "type" : "string"
+          },
+          "nombre" : {
+            "type" : "string"
+          },
+          "principioActivo" : {
+            "type" : "string"
+          },
+          "presentacion" : {
+            "type" : "string"
+          },
+          "activo" : {
+            "type" : "boolean"
+          }
+        }
+      },
+      "ActualizarEmpleadoRequest" : {
+        "type" : "object",
+        "properties" : {
+          "email" : {
+            "type" : "string",
+            "format" : "email",
+            "maxLength" : 255,
+            "minLength" : 0
+          },
+          "password" : {
+            "type" : "string",
+            "maxLength" : 100,
+            "minLength" : 8
+          },
+          "rol" : {
+            "type" : "string",
+            "enum" : [ "PACIENTE", "EMPLEADO", "ADMIN" ]
+          },
+          "cargo" : {
+            "type" : "string",
+            "enum" : [ "FARMACEUTICO", "AUXILIAR", "DOMICILIARIO" ]
+          },
+          "sedeId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "nombres" : {
+            "type" : "string",
+            "maxLength" : 120,
+            "minLength" : 0
+          },
+          "apellidos" : {
+            "type" : "string",
+            "maxLength" : 120,
+            "minLength" : 0
+          },
+          "activo" : {
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "activo", "apellidos", "cargo", "email", "nombres", "rol" ]
+      },
+      "EmpleadoAdminResponse" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "email" : {
+            "type" : "string"
+          },
+          "rol" : {
+            "type" : "string",
+            "enum" : [ "PACIENTE", "EMPLEADO", "ADMIN" ]
+          },
+          "cargo" : {
+            "type" : "string",
+            "enum" : [ "FARMACEUTICO", "AUXILIAR", "DOMICILIARIO" ]
+          },
+          "sedeId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "sedeCodigo" : {
+            "type" : "string"
+          },
+          "sedeNombre" : {
+            "type" : "string"
+          },
+          "nombres" : {
+            "type" : "string"
+          },
+          "apellidos" : {
+            "type" : "string"
+          },
+          "activo" : {
+            "type" : "boolean"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
           }
         }
       },
@@ -2642,6 +3618,156 @@
         },
         "required" : [ "cantidad", "motivo" ]
       },
+      "CrearSedeRequest" : {
+        "type" : "object",
+        "properties" : {
+          "codigo" : {
+            "type" : "string",
+            "maxLength" : 32,
+            "minLength" : 0
+          },
+          "nombre" : {
+            "type" : "string",
+            "maxLength" : 150,
+            "minLength" : 0
+          },
+          "direccion" : {
+            "type" : "string",
+            "maxLength" : 255,
+            "minLength" : 0
+          },
+          "latitud" : {
+            "type" : "number",
+            "maximum" : 90.0,
+            "minimum" : -90.0
+          },
+          "longitud" : {
+            "type" : "number",
+            "maximum" : 180.0,
+            "minimum" : -180.0
+          },
+          "horaApertura" : {
+            "type" : "string",
+            "format" : "time-local"
+          },
+          "horaCierre" : {
+            "type" : "string",
+            "format" : "time-local"
+          },
+          "activa" : {
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "codigo", "direccion", "horaApertura", "horaCierre", "latitud", "longitud", "nombre" ]
+      },
+      "CrearMedicamentoRequest" : {
+        "type" : "object",
+        "properties" : {
+          "codigo" : {
+            "type" : "string",
+            "maxLength" : 32,
+            "minLength" : 0
+          },
+          "nombre" : {
+            "type" : "string",
+            "maxLength" : 200,
+            "minLength" : 0
+          },
+          "principioActivo" : {
+            "type" : "string",
+            "maxLength" : 200,
+            "minLength" : 0
+          },
+          "presentacion" : {
+            "type" : "string",
+            "maxLength" : 200,
+            "minLength" : 0
+          },
+          "activo" : {
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "codigo", "nombre", "presentacion", "principioActivo" ]
+      },
+      "EventoIntegracionResponse" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "tipo" : {
+            "type" : "string"
+          },
+          "payload" : {
+            "type" : "string"
+          },
+          "estado" : {
+            "type" : "string",
+            "enum" : [ "PENDIENTE", "ENVIADO", "ERROR" ]
+          },
+          "intentos" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "ultimoError" : {
+            "type" : "string"
+          },
+          "idempotencyKey" : {
+            "type" : "string"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "enviadoEn" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        }
+      },
+      "CrearEmpleadoRequest" : {
+        "type" : "object",
+        "properties" : {
+          "email" : {
+            "type" : "string",
+            "format" : "email",
+            "maxLength" : 255,
+            "minLength" : 0
+          },
+          "password" : {
+            "type" : "string",
+            "maxLength" : 100,
+            "minLength" : 8
+          },
+          "rol" : {
+            "type" : "string",
+            "enum" : [ "PACIENTE", "EMPLEADO", "ADMIN" ]
+          },
+          "cargo" : {
+            "type" : "string",
+            "enum" : [ "FARMACEUTICO", "AUXILIAR", "DOMICILIARIO" ]
+          },
+          "sedeId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "nombres" : {
+            "type" : "string",
+            "maxLength" : 120,
+            "minLength" : 0
+          },
+          "apellidos" : {
+            "type" : "string",
+            "maxLength" : 120,
+            "minLength" : 0
+          },
+          "activo" : {
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "apellidos", "cargo", "email", "nombres", "password" ]
+      },
       "RegistroPacienteRequest" : {
         "type" : "object",
         "properties" : {
@@ -3025,6 +4151,313 @@
           }
         }
       },
+      "ReporteTurnosResponse" : {
+        "type" : "object",
+        "properties" : {
+          "desde" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "hasta" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "sedeId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "totalTurnos" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "totalAtendidos" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "totalVencidos" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "totalCancelados" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "porFranja" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/TurnosPorFranjaItem"
+            }
+          }
+        }
+      },
+      "TurnosPorFranjaItem" : {
+        "type" : "object",
+        "properties" : {
+          "franjaInicio" : {
+            "type" : "string"
+          },
+          "total" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "atendidos" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "enEspera" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "llamados" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "vencidos" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "cancelados" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
+      },
+      "ReporteTiemposResponse" : {
+        "type" : "object",
+        "properties" : {
+          "desde" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "hasta" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "sedeId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "cantidadPedidosEntregados" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "promedioPreparacionMin" : {
+            "type" : "number",
+            "format" : "double"
+          },
+          "promedioEntregaMin" : {
+            "type" : "number",
+            "format" : "double"
+          },
+          "promedioTotalMin" : {
+            "type" : "number",
+            "format" : "double"
+          },
+          "porDia" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/TiemposPorDiaItem"
+            }
+          },
+          "porModalidad" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/TiemposPorModalidadItem"
+            }
+          }
+        }
+      },
+      "TiemposPorDiaItem" : {
+        "type" : "object",
+        "properties" : {
+          "fecha" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "cantidadEntregados" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "promedioPreparacionMin" : {
+            "type" : "number",
+            "format" : "double"
+          },
+          "promedioEntregaMin" : {
+            "type" : "number",
+            "format" : "double"
+          },
+          "promedioTotalMin" : {
+            "type" : "number",
+            "format" : "double"
+          }
+        }
+      },
+      "TiemposPorModalidadItem" : {
+        "type" : "object",
+        "properties" : {
+          "modalidad" : {
+            "type" : "string",
+            "enum" : [ "RECOGER", "DOMICILIO" ]
+          },
+          "cantidadEntregados" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "promedioPreparacionMin" : {
+            "type" : "number",
+            "format" : "double"
+          },
+          "promedioEntregaMin" : {
+            "type" : "number",
+            "format" : "double"
+          },
+          "promedioTotalMin" : {
+            "type" : "number",
+            "format" : "double"
+          }
+        }
+      },
+      "PedidosPorDiaItem" : {
+        "type" : "object",
+        "properties" : {
+          "fecha" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "total" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "entregados" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "cancelados" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "vencidos" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
+      },
+      "PedidosPorEstadoItem" : {
+        "type" : "object",
+        "properties" : {
+          "estado" : {
+            "type" : "string",
+            "enum" : [ "RESERVADO", "EN_PREPARACION", "LISTO", "EN_RUTA", "ENTREGADO", "CANCELADO", "VENCIDO" ]
+          },
+          "cantidad" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
+      },
+      "ReportePedidosResponse" : {
+        "type" : "object",
+        "properties" : {
+          "desde" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "hasta" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "sedeId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "totalPedidos" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "totalEntregados" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "totalCancelados" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "totalVencidos" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "porEstado" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/PedidosPorEstadoItem"
+            }
+          },
+          "porDia" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/PedidosPorDiaItem"
+            }
+          }
+        }
+      },
+      "FaltanteMedicamentoItem" : {
+        "type" : "object",
+        "properties" : {
+          "medicamentoId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "medicamentoCodigo" : {
+            "type" : "string"
+          },
+          "medicamentoNombre" : {
+            "type" : "string"
+          },
+          "vecesFaltante" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "vecesAgotado" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "unidadesFaltantes" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "sedesAgotado" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "sedesBajoMinimo" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
+      },
+      "ReporteFaltantesResponse" : {
+        "type" : "object",
+        "properties" : {
+          "desde" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "hasta" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "sedeId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "items" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/FaltanteMedicamentoItem"
+            }
+          }
+        }
+      },
       "PantallaSalaResponse" : {
         "type" : "object",
         "properties" : {
@@ -3262,6 +4695,52 @@
           "listoEn" : {
             "type" : "string",
             "format" : "date-time"
+          }
+        }
+      },
+      "PaginaResponseMedicamentoAdminResponse" : {
+        "type" : "object",
+        "properties" : {
+          "content" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/MedicamentoAdminResponse"
+            }
+          },
+          "page" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "size" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "totalElements" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
+      },
+      "PaginaResponseEventoIntegracionResponse" : {
+        "type" : "object",
+        "properties" : {
+          "content" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/EventoIntegracionResponse"
+            }
+          },
+          "page" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "size" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "totalElements" : {
+            "type" : "integer",
+            "format" : "int64"
           }
         }
       },

@@ -68,6 +68,20 @@ class OpenApiContractTest {
 		assertThat(paths.has("/api/v1/gestion/rutas/{id}/iniciar")).isTrue();
 		assertThat(paths.has("/api/v1/gestion/rutas/{id}/paradas/{paradaId}/entregar")).isTrue();
 		assertThat(paths.has("/api/v1/gestion/rutas/{id}/paradas/{paradaId}/fallida")).isTrue();
+		assertThat(paths.has("/api/v1/gestion/reportes/pedidos")).isTrue();
+		assertThat(paths.has("/api/v1/gestion/reportes/tiempos")).isTrue();
+		assertThat(paths.has("/api/v1/gestion/reportes/turnos")).isTrue();
+		assertThat(paths.has("/api/v1/gestion/reportes/faltantes")).isTrue();
+		assertThat(paths.has("/api/v1/gestion/admin/sedes")).isTrue();
+		assertThat(paths.has("/api/v1/gestion/admin/sedes/{id}")).isTrue();
+		assertThat(paths.has("/api/v1/gestion/admin/empleados")).isTrue();
+		assertThat(paths.has("/api/v1/gestion/admin/empleados/{id}")).isTrue();
+		assertThat(paths.has("/api/v1/gestion/admin/medicamentos")).isTrue();
+		assertThat(paths.has("/api/v1/gestion/admin/medicamentos/{id}")).isTrue();
+		assertThat(paths.has("/api/v1/gestion/admin/parametros")).isTrue();
+		assertThat(paths.has("/api/v1/gestion/admin/parametros/{clave}")).isTrue();
+		assertThat(paths.has("/api/v1/gestion/admin/integracion/eventos")).isTrue();
+		assertThat(paths.has("/api/v1/gestion/admin/integracion/eventos/{id}/reintentar")).isTrue();
 
 		if (Boolean.parseBoolean(System.getProperty("export.openapi", "false"))) {
 			Files.createDirectories(CONTRACT_PATH.getParent());

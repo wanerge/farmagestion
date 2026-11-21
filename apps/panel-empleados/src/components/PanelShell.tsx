@@ -6,10 +6,12 @@ import { useState } from "react";
 import {
   esAdmin,
   etiquetaRolUsuario,
+  puedeAdministrar,
   puedeArmarRutas,
   puedeEjecutarRutas,
   puedeGestionarPedidosYTurnos,
   puedeVerInventario,
+  puedeVerReportes,
 } from "@/lib/auth/permisos";
 import { useApp } from "./AppProvider";
 
@@ -48,6 +50,12 @@ export function PanelShell({ children }: { children: React.ReactNode }) {
   }
   if (puedeEjecutarRutas(usuario)) {
     navItems.push({ href: "/mi-ruta", label: "Mi ruta" });
+  }
+  if (puedeVerReportes(usuario)) {
+    navItems.push({ href: "/reportes", label: "Reportes" });
+  }
+  if (puedeAdministrar(usuario)) {
+    navItems.push({ href: "/admin", label: "Administración" });
   }
   navItems.push({
     href: "/notificaciones",

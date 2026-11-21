@@ -12,6 +12,8 @@ interface EmpleadoRepository extends JpaRepository<Empleado, UUID> {
 
 	Optional<Empleado> findByUsuarioId(UUID usuarioId);
 
+	List<Empleado> findAllByOrderByNombresAscApellidosAsc();
+
 	List<Empleado> findAllByUsuarioIdIn(Collection<UUID> usuarioIds);
 
 	@Query("""

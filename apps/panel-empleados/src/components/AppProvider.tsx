@@ -44,6 +44,7 @@ interface AppContextValue {
   setSedeSeleccionadaId: (sedeId: string) => void;
   /** Objeto sede correspondiente a sedeSeleccionadaId (o sede del empleado). */
   sedeActiva: SedePublica | null;
+  refrescarSedes: () => Promise<void>;
   noLeidas: number;
   refrescarNotificaciones: () => Promise<void>;
   iniciarSesion: (email: string, password: string) => Promise<void>;
@@ -152,22 +153,23 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, [agregarAviso, cerrarSesion]);
 
   // Cargar catálogo público de sedes
-  useEffect(() => {
-    let cancelled = false;
-    farmaApi
-      .listarSedes({ notifyGlobalError: false })
-      .then((lista) => {
-        if (!cancelled) {
-          setSedes(lista);
-        }
-      })
-      .catch(() => {
-        // Silencioso en arranque; se reintenta si hace falta
-      });
-    return () => {
-      cancelled = true;
-    };
+  const refrescarSedes = useCallback(async () => {
+    try {
+      const lista = await farmaApi.listarSedes({ notifyGlobalError: false });
+      setSedes(lista);
+    } catch {
+      // Silencioso en arranque; se reintenta si hace falta
+    }
   }, []);
+
+  useEffect(() => {
+    const id = window.setTimeout(() => {
+      void refrescarSedes();
+    }, 0);
+    return () => {
+      window.clearTimeout(id);
+    };
+  }, [refrescarSedes]);
 
   const accessToken = sesion?.accessToken;
 
@@ -243,6 +245,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       sedeSeleccionadaId,
       setSedeSeleccionadaId,
       sedeActiva,
+      refrescarSedes,
       noLeidas,
       refrescarNotificaciones,
       iniciarSesion,
@@ -256,6 +259,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       sedeSeleccionadaId,
       setSedeSeleccionadaId,
       sedeActiva,
+      refrescarSedes,
       noLeidas,
       refrescarNotificaciones,
       iniciarSesion,

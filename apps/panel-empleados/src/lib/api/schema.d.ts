@@ -45,6 +45,110 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/gestion/admin/sedes/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Actualizar sede
+         * @description Edita los datos, horario, coordenadas o estado activo de una sede (RF-EMP-30).
+         */
+        put: operations["actualizarSede"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/gestion/admin/parametros": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Listar parámetros del sistema
+         * @description Devuelve todos los parámetros configurables de 00 §6.3 (RF-EMP-33).
+         */
+        get: operations["listarParametros"];
+        /**
+         * Actualizar parámetros en lote
+         * @description Actualiza el valor de uno o varios parámetros de 00 §6.3 (RF-EMP-33).
+         */
+        put: operations["actualizarParametros"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/gestion/admin/parametros/{clave}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Actualizar parámetro individual
+         * @description Actualiza el valor de un parámetro específico por su clave (RF-EMP-33).
+         */
+        put: operations["actualizarParametro"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/gestion/admin/medicamentos/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Actualizar medicamento
+         * @description Edita los datos o desactiva/activa un medicamento del catálogo (RF-EMP-32).
+         */
+        put: operations["actualizarMedicamento"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/gestion/admin/empleados/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Actualizar empleado
+         * @description Edita cargo, sede, correo, contraseña opcional o estado activo de un empleado (RF-EMP-31).
+         */
+        put: operations["actualizarEmpleado"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/pacientes/me/pedidos": {
         parameters: {
             query?: never;
@@ -397,6 +501,98 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/gestion/admin/sedes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Listar todas las sedes
+         * @description Lista todas las sedes (activas e inactivas) para administración (RF-EMP-30).
+         */
+        get: operations["listarSedes"];
+        put?: never;
+        /**
+         * Crear sede
+         * @description Crea una nueva sede con horario y coordenadas (RF-EMP-30).
+         */
+        post: operations["crearSede"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/gestion/admin/medicamentos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Listar catálogo de medicamentos
+         * @description Lista paginada del catálogo de medicamentos (activos e inactivos) con búsqueda (RF-EMP-32).
+         */
+        get: operations["listarMedicamentos"];
+        put?: never;
+        /**
+         * Crear medicamento
+         * @description Crea un medicamento en el catálogo y genera automáticamente registros de inventario en cero para cada sede activa (RF-EMP-32).
+         */
+        post: operations["crearMedicamento"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/gestion/admin/integracion/eventos/{id}/reintentar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Reintentar manualmente evento de integración
+         * @description Reencola y reintenta de inmediato un evento de integración en estado ERROR o PENDIENTE (RF-EMP-34).
+         */
+        post: operations["reintentarEvento"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/gestion/admin/empleados": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Listar empleados
+         * @description Lista todas las cuentas de empleados y administradores con cargo, sede y estado (RF-EMP-31).
+         */
+        get: operations["listarEmpleados"];
+        put?: never;
+        /**
+         * Crear empleado
+         * @description Crea una cuenta de empleado con cargo y sede asignada (RF-EMP-31).
+         */
+        post: operations["crearEmpleado"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/registro": {
         parameters: {
             query?: never;
@@ -633,6 +829,86 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/gestion/reportes/turnos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Reporte de turnos por franja
+         * @description Agrega turnos atendidos y por estado agrupados por franja horaria (RF-EMP-28).
+         */
+        get: operations["reporteTurnos"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/gestion/reportes/tiempos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Reporte de tiempos de preparación y entrega
+         * @description Calcula tiempos promedio de preparación (RESERVADO -> LISTO) y entrega (LISTO -> ENTREGADO) en minutos (RF-EMP-28, CA-EMP-14).
+         */
+        get: operations["reporteTiempos"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/gestion/reportes/pedidos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Reporte de pedidos por estado y por día
+         * @description Agrega pedidos por estado y atendidos por día en el rango de fechas indicado (RF-EMP-28).
+         */
+        get: operations["reportePedidos"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/gestion/reportes/faltantes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Ranking de medicamentos agotados o con más faltantes
+         * @description Lista el ranking de medicamentos con faltantes en pedidos del rango o agotados en inventario (RF-EMP-28).
+         */
+        get: operations["reporteFaltantes"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/gestion/public/sala/{sedeCodigo}": {
         parameters: {
             query?: never;
@@ -773,6 +1049,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/gestion/admin/integracion/eventos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Consultar eventos del outbox de integración
+         * @description Lista paginada de eventos de integración con filtro opcional por estado (PENDIENTE, ENVIADO, ERROR) (RF-EMP-34).
+         */
+        get: operations["listarEventos"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/catalogo/sedes": {
         parameters: {
             query?: never;
@@ -784,7 +1080,7 @@ export interface paths {
          * Listar sedes activas
          * @description Retorna las sedes activas con dirección, horario y coordenadas para mapa (RF-PAC-05).
          */
-        get: operations["listarSedes"];
+        get: operations["listarSedes_1"];
         put?: never;
         post?: never;
         delete?: never;
@@ -898,6 +1194,95 @@ export interface components {
             latitudEntrega?: number;
             longitudEntrega?: number;
             esParcial?: boolean;
+        };
+        ActualizarSedeRequest: {
+            codigo: string;
+            nombre: string;
+            direccion: string;
+            latitud: number;
+            longitud: number;
+            /** Format: time-local */
+            horaApertura: string;
+            /** Format: time-local */
+            horaCierre: string;
+            activa: boolean;
+        };
+        SedeAdminResponse: {
+            /** Format: uuid */
+            id?: string;
+            codigo?: string;
+            nombre?: string;
+            direccion?: string;
+            latitud?: number;
+            longitud?: number;
+            /** Format: time-local */
+            horaApertura?: string;
+            /** Format: time-local */
+            horaCierre?: string;
+            activa?: boolean;
+        };
+        ActualizarParametrosRequest: {
+            parametros: components["schemas"]["ParametroValorItem"][];
+        };
+        ParametroValorItem: {
+            clave: string;
+            valor: string;
+        };
+        ParametroResponse: {
+            clave?: string;
+            valor?: string;
+            descripcion?: string;
+        };
+        ActualizarParametroRequest: {
+            valor: string;
+        };
+        ActualizarMedicamentoRequest: {
+            codigo: string;
+            nombre: string;
+            principioActivo: string;
+            presentacion: string;
+            activo: boolean;
+        };
+        MedicamentoAdminResponse: {
+            /** Format: uuid */
+            id?: string;
+            codigo?: string;
+            nombre?: string;
+            principioActivo?: string;
+            presentacion?: string;
+            activo?: boolean;
+        };
+        ActualizarEmpleadoRequest: {
+            /** Format: email */
+            email: string;
+            password?: string;
+            /** @enum {string} */
+            rol: "PACIENTE" | "EMPLEADO" | "ADMIN";
+            /** @enum {string} */
+            cargo: "FARMACEUTICO" | "AUXILIAR" | "DOMICILIARIO";
+            /** Format: uuid */
+            sedeId?: string;
+            nombres: string;
+            apellidos: string;
+            activo: boolean;
+        };
+        EmpleadoAdminResponse: {
+            /** Format: uuid */
+            id?: string;
+            email?: string;
+            /** @enum {string} */
+            rol?: "PACIENTE" | "EMPLEADO" | "ADMIN";
+            /** @enum {string} */
+            cargo?: "FARMACEUTICO" | "AUXILIAR" | "DOMICILIARIO";
+            /** Format: uuid */
+            sedeId?: string;
+            sedeCodigo?: string;
+            sedeNombre?: string;
+            nombres?: string;
+            apellidos?: string;
+            activo?: boolean;
+            /** Format: date-time */
+            createdAt?: string;
         };
         CrearPedidoRequest: {
             /** Format: uuid */
@@ -1146,6 +1531,55 @@ export interface components {
             cantidad: number;
             motivo: string;
         };
+        CrearSedeRequest: {
+            codigo: string;
+            nombre: string;
+            direccion: string;
+            latitud: number;
+            longitud: number;
+            /** Format: time-local */
+            horaApertura: string;
+            /** Format: time-local */
+            horaCierre: string;
+            activa?: boolean;
+        };
+        CrearMedicamentoRequest: {
+            codigo: string;
+            nombre: string;
+            principioActivo: string;
+            presentacion: string;
+            activo?: boolean;
+        };
+        EventoIntegracionResponse: {
+            /** Format: uuid */
+            id?: string;
+            tipo?: string;
+            payload?: string;
+            /** @enum {string} */
+            estado?: "PENDIENTE" | "ENVIADO" | "ERROR";
+            /** Format: int32 */
+            intentos?: number;
+            ultimoError?: string;
+            idempotencyKey?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: date-time */
+            enviadoEn?: string;
+        };
+        CrearEmpleadoRequest: {
+            /** Format: email */
+            email: string;
+            password: string;
+            /** @enum {string} */
+            rol?: "PACIENTE" | "EMPLEADO" | "ADMIN";
+            /** @enum {string} */
+            cargo: "FARMACEUTICO" | "AUXILIAR" | "DOMICILIARIO";
+            /** Format: uuid */
+            sedeId?: string;
+            nombres: string;
+            apellidos: string;
+            activo?: boolean;
+        };
         RegistroPacienteRequest: {
             /** Format: email */
             email: string;
@@ -1299,6 +1733,141 @@ export interface components {
             sincronizadaEn?: string;
             items?: components["schemas"]["FormulaItemResumenResponse"][];
         };
+        ReporteTurnosResponse: {
+            /** Format: date */
+            desde?: string;
+            /** Format: date */
+            hasta?: string;
+            /** Format: uuid */
+            sedeId?: string;
+            /** Format: int64 */
+            totalTurnos?: number;
+            /** Format: int64 */
+            totalAtendidos?: number;
+            /** Format: int64 */
+            totalVencidos?: number;
+            /** Format: int64 */
+            totalCancelados?: number;
+            porFranja?: components["schemas"]["TurnosPorFranjaItem"][];
+        };
+        TurnosPorFranjaItem: {
+            franjaInicio?: string;
+            /** Format: int64 */
+            total?: number;
+            /** Format: int64 */
+            atendidos?: number;
+            /** Format: int64 */
+            enEspera?: number;
+            /** Format: int64 */
+            llamados?: number;
+            /** Format: int64 */
+            vencidos?: number;
+            /** Format: int64 */
+            cancelados?: number;
+        };
+        ReporteTiemposResponse: {
+            /** Format: date */
+            desde?: string;
+            /** Format: date */
+            hasta?: string;
+            /** Format: uuid */
+            sedeId?: string;
+            /** Format: int64 */
+            cantidadPedidosEntregados?: number;
+            /** Format: double */
+            promedioPreparacionMin?: number;
+            /** Format: double */
+            promedioEntregaMin?: number;
+            /** Format: double */
+            promedioTotalMin?: number;
+            porDia?: components["schemas"]["TiemposPorDiaItem"][];
+            porModalidad?: components["schemas"]["TiemposPorModalidadItem"][];
+        };
+        TiemposPorDiaItem: {
+            /** Format: date */
+            fecha?: string;
+            /** Format: int64 */
+            cantidadEntregados?: number;
+            /** Format: double */
+            promedioPreparacionMin?: number;
+            /** Format: double */
+            promedioEntregaMin?: number;
+            /** Format: double */
+            promedioTotalMin?: number;
+        };
+        TiemposPorModalidadItem: {
+            /** @enum {string} */
+            modalidad?: "RECOGER" | "DOMICILIO";
+            /** Format: int64 */
+            cantidadEntregados?: number;
+            /** Format: double */
+            promedioPreparacionMin?: number;
+            /** Format: double */
+            promedioEntregaMin?: number;
+            /** Format: double */
+            promedioTotalMin?: number;
+        };
+        PedidosPorDiaItem: {
+            /** Format: date */
+            fecha?: string;
+            /** Format: int64 */
+            total?: number;
+            /** Format: int64 */
+            entregados?: number;
+            /** Format: int64 */
+            cancelados?: number;
+            /** Format: int64 */
+            vencidos?: number;
+        };
+        PedidosPorEstadoItem: {
+            /** @enum {string} */
+            estado?: "RESERVADO" | "EN_PREPARACION" | "LISTO" | "EN_RUTA" | "ENTREGADO" | "CANCELADO" | "VENCIDO";
+            /** Format: int64 */
+            cantidad?: number;
+        };
+        ReportePedidosResponse: {
+            /** Format: date */
+            desde?: string;
+            /** Format: date */
+            hasta?: string;
+            /** Format: uuid */
+            sedeId?: string;
+            /** Format: int64 */
+            totalPedidos?: number;
+            /** Format: int64 */
+            totalEntregados?: number;
+            /** Format: int64 */
+            totalCancelados?: number;
+            /** Format: int64 */
+            totalVencidos?: number;
+            porEstado?: components["schemas"]["PedidosPorEstadoItem"][];
+            porDia?: components["schemas"]["PedidosPorDiaItem"][];
+        };
+        FaltanteMedicamentoItem: {
+            /** Format: uuid */
+            medicamentoId?: string;
+            medicamentoCodigo?: string;
+            medicamentoNombre?: string;
+            /** Format: int64 */
+            vecesFaltante?: number;
+            /** Format: int64 */
+            vecesAgotado?: number;
+            /** Format: int64 */
+            unidadesFaltantes?: number;
+            /** Format: int64 */
+            sedesAgotado?: number;
+            /** Format: int64 */
+            sedesBajoMinimo?: number;
+        };
+        ReporteFaltantesResponse: {
+            /** Format: date */
+            desde?: string;
+            /** Format: date */
+            hasta?: string;
+            /** Format: uuid */
+            sedeId?: string;
+            items?: components["schemas"]["FaltanteMedicamentoItem"][];
+        };
         PantallaSalaResponse: {
             sedeCodigo?: string;
             sedeNombre?: string;
@@ -1392,6 +1961,24 @@ export interface components {
             expiraEn?: string;
             /** Format: date-time */
             listoEn?: string;
+        };
+        PaginaResponseMedicamentoAdminResponse: {
+            content?: components["schemas"]["MedicamentoAdminResponse"][];
+            /** Format: int32 */
+            page?: number;
+            /** Format: int32 */
+            size?: number;
+            /** Format: int64 */
+            totalElements?: number;
+        };
+        PaginaResponseEventoIntegracionResponse: {
+            content?: components["schemas"]["EventoIntegracionResponse"][];
+            /** Format: int32 */
+            page?: number;
+            /** Format: int32 */
+            size?: number;
+            /** Format: int64 */
+            totalElements?: number;
         };
         SedePublicaResponse: {
             /** Format: uuid */
@@ -1522,6 +2109,154 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["RutaDetalleResponse"];
+                };
+            };
+        };
+    };
+    actualizarSede: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ActualizarSedeRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["SedeAdminResponse"];
+                };
+            };
+        };
+    };
+    listarParametros: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ParametroResponse"][];
+                };
+            };
+        };
+    };
+    actualizarParametros: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ActualizarParametrosRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ParametroResponse"][];
+                };
+            };
+        };
+    };
+    actualizarParametro: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                clave: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ActualizarParametroRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ParametroResponse"];
+                };
+            };
+        };
+    };
+    actualizarMedicamento: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ActualizarMedicamentoRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["MedicamentoAdminResponse"];
+                };
+            };
+        };
+    };
+    actualizarEmpleado: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ActualizarEmpleadoRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EmpleadoAdminResponse"];
                 };
             };
         };
@@ -2018,6 +2753,165 @@ export interface operations {
             };
         };
     };
+    listarSedes: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["SedeAdminResponse"][];
+                };
+            };
+        };
+    };
+    crearSede: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CrearSedeRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["SedeAdminResponse"];
+                };
+            };
+        };
+    };
+    listarMedicamentos: {
+        parameters: {
+            query?: {
+                q?: string;
+                activo?: boolean;
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PaginaResponseMedicamentoAdminResponse"];
+                };
+            };
+        };
+    };
+    crearMedicamento: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CrearMedicamentoRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["MedicamentoAdminResponse"];
+                };
+            };
+        };
+    };
+    reintentarEvento: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EventoIntegracionResponse"];
+                };
+            };
+        };
+    };
+    listarEmpleados: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EmpleadoAdminResponse"][];
+                };
+            };
+        };
+    };
+    crearEmpleado: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CrearEmpleadoRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EmpleadoAdminResponse"];
+                };
+            };
+        };
+    };
     registrarPaciente: {
         parameters: {
             query?: never;
@@ -2297,6 +3191,102 @@ export interface operations {
             };
         };
     };
+    reporteTurnos: {
+        parameters: {
+            query?: {
+                sedeId?: string;
+                desde?: string;
+                hasta?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ReporteTurnosResponse"];
+                };
+            };
+        };
+    };
+    reporteTiempos: {
+        parameters: {
+            query?: {
+                sedeId?: string;
+                desde?: string;
+                hasta?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ReporteTiemposResponse"];
+                };
+            };
+        };
+    };
+    reportePedidos: {
+        parameters: {
+            query?: {
+                sedeId?: string;
+                desde?: string;
+                hasta?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ReportePedidosResponse"];
+                };
+            };
+        };
+    };
+    reporteFaltantes: {
+        parameters: {
+            query?: {
+                sedeId?: string;
+                desde?: string;
+                hasta?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ReporteFaltantesResponse"];
+                };
+            };
+        };
+    };
     consultarSala: {
         parameters: {
             query?: {
@@ -2472,7 +3462,31 @@ export interface operations {
             };
         };
     };
-    listarSedes: {
+    listarEventos: {
+        parameters: {
+            query?: {
+                estado?: "PENDIENTE" | "ENVIADO" | "ERROR";
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PaginaResponseEventoIntegracionResponse"];
+                };
+            };
+        };
+    };
+    listarSedes_1: {
         parameters: {
             query?: never;
             header?: never;

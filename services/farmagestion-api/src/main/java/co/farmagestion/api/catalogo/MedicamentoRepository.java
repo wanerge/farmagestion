@@ -20,6 +20,41 @@ interface MedicamentoRepository extends JpaRepository<Medicamento, UUID> {
 
 	List<Medicamento> findAllByCodigoIn(Collection<String> codigos);
 
+	List<Medicamento> findAllByActivoTrueOrderByNombreAsc();
+
+	boolean existsByCodigoIgnoreCase(String codigo);
+
+	boolean existsByCodigoIgnoreCaseAndIdNot(String codigo, UUID id);
+
+	@Query(
+			value = """
+					SELECT * FROM medicamento m
+					WHERE (:estadoFiltro = 'TODOS'
+					    OR (:estadoFiltro = 'ACTIVOS' AND m.activo = TRUE)
+					    OR (:estadoFiltro = 'INACTIVOS' AND m.activo = FALSE))
+					  AND (
+					    :q = ''
+					    OR translate(lower(m.nombre), 'áéíóúü', 'aeiouu') LIKE '%' || translate(lower(:q), 'áéíóúü', 'aeiouu') || '%'
+					    OR translate(lower(m.principio_activo), 'áéíóúü', 'aeiouu') LIKE '%' || translate(lower(:q), 'áéíóúü', 'aeiouu') || '%'
+					    OR lower(m.codigo) LIKE '%' || lower(:q) || '%'
+					  )
+					ORDER BY m.codigo ASC
+					""",
+			countQuery = """
+					SELECT COUNT(*) FROM medicamento m
+					WHERE (:estadoFiltro = 'TODOS'
+					    OR (:estadoFiltro = 'ACTIVOS' AND m.activo = TRUE)
+					    OR (:estadoFiltro = 'INACTIVOS' AND m.activo = FALSE))
+					  AND (
+					    :q = ''
+					    OR translate(lower(m.nombre), 'áéíóúü', 'aeiouu') LIKE '%' || translate(lower(:q), 'áéíóúü', 'aeiouu') || '%'
+					    OR translate(lower(m.principio_activo), 'áéíóúü', 'aeiouu') LIKE '%' || translate(lower(:q), 'áéíóúü', 'aeiouu') || '%'
+					    OR lower(m.codigo) LIKE '%' || lower(:q) || '%'
+					  )
+					""",
+			nativeQuery = true)
+	Page<Medicamento> buscarAdmin(@Param("q") String q, @Param("estadoFiltro") String estadoFiltro, Pageable pageable);
+
 	@Query(
 			value = """
 					SELECT * FROM medicamento m

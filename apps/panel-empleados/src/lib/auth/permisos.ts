@@ -41,6 +41,14 @@ export function puedeEjecutarRutas(usuario?: UsuarioResumen | null): boolean {
   return esDomiciliario(usuario);
 }
 
+export function puedeVerReportes(usuario?: UsuarioResumen | null): boolean {
+  return esAdmin(usuario) || esFarmaceutico(usuario);
+}
+
+export function puedeAdministrar(usuario?: UsuarioResumen | null): boolean {
+  return esAdmin(usuario);
+}
+
 export function etiquetaRolUsuario(usuario?: UsuarioResumen | null): string {
   if (!usuario) return "";
   if (usuario.rol === "ADMIN") return "Administrador";

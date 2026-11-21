@@ -36,6 +36,25 @@ export type CrearRutaRequest = Schemas["CrearRutaRequest"];
 export type ReordenarRutaRequest = Schemas["ReordenarRutaRequest"];
 export type EntregarParadaRequest = Schemas["EntregarParadaRequest"];
 export type ParadaFallidaRequest = Schemas["ParadaFallidaRequest"];
+export type ReportePedidos = Schemas["ReportePedidosResponse"];
+export type ReporteTiempos = Schemas["ReporteTiemposResponse"];
+export type ReporteTurnos = Schemas["ReporteTurnosResponse"];
+export type ReporteFaltantes = Schemas["ReporteFaltantesResponse"];
+export type SedeAdmin = Schemas["SedeAdminResponse"];
+export type CrearSedeRequest = Schemas["CrearSedeRequest"];
+export type ActualizarSedeRequest = Schemas["ActualizarSedeRequest"];
+export type EmpleadoAdmin = Schemas["EmpleadoAdminResponse"];
+export type CrearEmpleadoRequest = Schemas["CrearEmpleadoRequest"];
+export type ActualizarEmpleadoRequest = Schemas["ActualizarEmpleadoRequest"];
+export type MedicamentoAdmin = Schemas["MedicamentoAdminResponse"];
+export type PaginaMedicamentosAdmin = Schemas["PaginaResponseMedicamentoAdminResponse"];
+export type CrearMedicamentoRequest = Schemas["CrearMedicamentoRequest"];
+export type ActualizarMedicamentoRequest = Schemas["ActualizarMedicamentoRequest"];
+export type Parametro = Schemas["ParametroResponse"];
+export type ActualizarParametrosRequest = Schemas["ActualizarParametrosRequest"];
+export type EventoIntegracion = Schemas["EventoIntegracionResponse"];
+export type PaginaEventosIntegracion = Schemas["PaginaResponseEventoIntegracionResponse"];
+export type EstadoEventoIntegracion = NonNullable<EventoIntegracion["estado"]>;
 
 export type EstadoPedido = NonNullable<PedidoResumen["estado"]>;
 export type ModalidadPedido = NonNullable<PedidoResumen["modalidad"]>;
@@ -70,6 +89,15 @@ export type RutasQuery = NonNullable<
 >;
 export type MisRutasQuery = NonNullable<
   paths["/api/v1/gestion/rutas/mias"]["get"]["parameters"]["query"]
+>;
+export type ReporteQuery = NonNullable<
+  paths["/api/v1/gestion/reportes/pedidos"]["get"]["parameters"]["query"]
+>;
+export type MedicamentosAdminQuery = NonNullable<
+  paths["/api/v1/gestion/admin/medicamentos"]["get"]["parameters"]["query"]
+>;
+export type EventosIntegracionQuery = NonNullable<
+  paths["/api/v1/gestion/admin/integracion/eventos"]["get"]["parameters"]["query"]
 >;
 
 export interface ResumenTablero {
@@ -584,6 +612,192 @@ export const farmaApi = {
         paradaId,
       }),
       { method: "POST", body: JSON.stringify(body) },
+      options
+    );
+  },
+
+  // Reportes (RF-EMP-28, RF-EMP-29, CA-EMP-14)
+  obtenerReportePedidos(
+    query: ReporteQuery = {},
+    options?: RequestOptions
+  ): Promise<ReportePedidos> {
+    const qs = buildQueryString(query);
+    return apiRequest<ReportePedidos>(
+      `${resolvePath("/api/v1/gestion/reportes/pedidos")}${qs}`,
+      { method: "GET" },
+      options
+    );
+  },
+
+  obtenerReporteTiempos(
+    query: ReporteQuery = {},
+    options?: RequestOptions
+  ): Promise<ReporteTiempos> {
+    const qs = buildQueryString(query);
+    return apiRequest<ReporteTiempos>(
+      `${resolvePath("/api/v1/gestion/reportes/tiempos")}${qs}`,
+      { method: "GET" },
+      options
+    );
+  },
+
+  obtenerReporteTurnos(
+    query: ReporteQuery = {},
+    options?: RequestOptions
+  ): Promise<ReporteTurnos> {
+    const qs = buildQueryString(query);
+    return apiRequest<ReporteTurnos>(
+      `${resolvePath("/api/v1/gestion/reportes/turnos")}${qs}`,
+      { method: "GET" },
+      options
+    );
+  },
+
+  obtenerReporteFaltantes(
+    query: ReporteQuery = {},
+    options?: RequestOptions
+  ): Promise<ReporteFaltantes> {
+    const qs = buildQueryString(query);
+    return apiRequest<ReporteFaltantes>(
+      `${resolvePath("/api/v1/gestion/reportes/faltantes")}${qs}`,
+      { method: "GET" },
+      options
+    );
+  },
+
+  // Administración (solo ADMIN, RF-EMP-30 a RF-EMP-34)
+  listarSedesAdmin(options?: RequestOptions): Promise<SedeAdmin[]> {
+    return apiRequest<SedeAdmin[]>(
+      resolvePath("/api/v1/gestion/admin/sedes"),
+      { method: "GET" },
+      options
+    );
+  },
+
+  crearSedeAdmin(body: CrearSedeRequest, options?: RequestOptions): Promise<SedeAdmin> {
+    return apiRequest<SedeAdmin>(
+      resolvePath("/api/v1/gestion/admin/sedes"),
+      { method: "POST", body: JSON.stringify(body) },
+      options
+    );
+  },
+
+  actualizarSedeAdmin(
+    id: string,
+    body: ActualizarSedeRequest,
+    options?: RequestOptions
+  ): Promise<SedeAdmin> {
+    return apiRequest<SedeAdmin>(
+      resolvePath("/api/v1/gestion/admin/sedes/{id}", { id }),
+      { method: "PUT", body: JSON.stringify(body) },
+      options
+    );
+  },
+
+  listarEmpleadosAdmin(options?: RequestOptions): Promise<EmpleadoAdmin[]> {
+    return apiRequest<EmpleadoAdmin[]>(
+      resolvePath("/api/v1/gestion/admin/empleados"),
+      { method: "GET" },
+      options
+    );
+  },
+
+  crearEmpleadoAdmin(
+    body: CrearEmpleadoRequest,
+    options?: RequestOptions
+  ): Promise<EmpleadoAdmin> {
+    return apiRequest<EmpleadoAdmin>(
+      resolvePath("/api/v1/gestion/admin/empleados"),
+      { method: "POST", body: JSON.stringify(body) },
+      options
+    );
+  },
+
+  actualizarEmpleadoAdmin(
+    id: string,
+    body: ActualizarEmpleadoRequest,
+    options?: RequestOptions
+  ): Promise<EmpleadoAdmin> {
+    return apiRequest<EmpleadoAdmin>(
+      resolvePath("/api/v1/gestion/admin/empleados/{id}", { id }),
+      { method: "PUT", body: JSON.stringify(body) },
+      options
+    );
+  },
+
+  listarMedicamentosAdmin(
+    query: MedicamentosAdminQuery = {},
+    options?: RequestOptions
+  ): Promise<PaginaMedicamentosAdmin> {
+    const qs = buildQueryString(query);
+    return apiRequest<PaginaMedicamentosAdmin>(
+      `${resolvePath("/api/v1/gestion/admin/medicamentos")}${qs}`,
+      { method: "GET" },
+      options
+    );
+  },
+
+  crearMedicamentoAdmin(
+    body: CrearMedicamentoRequest,
+    options?: RequestOptions
+  ): Promise<MedicamentoAdmin> {
+    return apiRequest<MedicamentoAdmin>(
+      resolvePath("/api/v1/gestion/admin/medicamentos"),
+      { method: "POST", body: JSON.stringify(body) },
+      options
+    );
+  },
+
+  actualizarMedicamentoAdmin(
+    id: string,
+    body: ActualizarMedicamentoRequest,
+    options?: RequestOptions
+  ): Promise<MedicamentoAdmin> {
+    return apiRequest<MedicamentoAdmin>(
+      resolvePath("/api/v1/gestion/admin/medicamentos/{id}", { id }),
+      { method: "PUT", body: JSON.stringify(body) },
+      options
+    );
+  },
+
+  listarParametrosAdmin(options?: RequestOptions): Promise<Parametro[]> {
+    return apiRequest<Parametro[]>(
+      resolvePath("/api/v1/gestion/admin/parametros"),
+      { method: "GET" },
+      options
+    );
+  },
+
+  actualizarParametrosAdmin(
+    body: ActualizarParametrosRequest,
+    options?: RequestOptions
+  ): Promise<Parametro[]> {
+    return apiRequest<Parametro[]>(
+      resolvePath("/api/v1/gestion/admin/parametros"),
+      { method: "PUT", body: JSON.stringify(body) },
+      options
+    );
+  },
+
+  listarEventosIntegracionAdmin(
+    query: EventosIntegracionQuery = {},
+    options?: RequestOptions
+  ): Promise<PaginaEventosIntegracion> {
+    const qs = buildQueryString(query);
+    return apiRequest<PaginaEventosIntegracion>(
+      `${resolvePath("/api/v1/gestion/admin/integracion/eventos")}${qs}`,
+      { method: "GET" },
+      options
+    );
+  },
+
+  reintentarEventoIntegracionAdmin(
+    id: string,
+    options?: RequestOptions
+  ): Promise<EventoIntegracion> {
+    return apiRequest<EventoIntegracion>(
+      resolvePath("/api/v1/gestion/admin/integracion/eventos/{id}/reintentar", { id }),
+      { method: "POST" },
       options
     );
   },

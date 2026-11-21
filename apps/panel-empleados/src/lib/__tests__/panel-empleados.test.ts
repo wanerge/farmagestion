@@ -10,12 +10,15 @@ import { ApiError, isApiError } from "../api/problem";
 import {
   calcularAccionesPedido,
   esPersonalAutorizado,
+  puedeAdministrar,
   puedeArmarRutas,
   puedeEditarInventario,
   puedeEjecutarRutas,
   puedeGestionarPedidosYTurnos,
   puedeVerInventario,
+  puedeVerReportes,
 } from "../auth/permisos";
+import { generarCsv } from "../csv";
 
 const FARMACEUTICO: UsuarioResumen = {
   id: "11111111-1111-1111-1111-111111111111",
@@ -104,6 +107,17 @@ describe("Panel de empleados · Reglas de roles, cliente tipado y errores proble
     expect(puedeEjecutarRutas(FARMACEUTICO)).toBe(false);
     expect(puedeEjecutarRutas(DOMICILIARIO)).toBe(true);
     expect(puedeEjecutarRutas(ADMIN)).toBe(false);
+
+    // Reportes y Administración (03 §3, RF-EMP-28 a RF-EMP-34)
+    expect(puedeVerReportes(AUXILIAR)).toBe(false);
+    expect(puedeVerReportes(FARMACEUTICO)).toBe(true);
+    expect(puedeVerReportes(DOMICILIARIO)).toBe(false);
+    expect(puedeVerReportes(ADMIN)).toBe(true);
+
+    expect(puedeAdministrar(AUXILIAR)).toBe(false);
+    expect(puedeAdministrar(FARMACEUTICO)).toBe(false);
+    expect(puedeAdministrar(DOMICILIARIO)).toBe(false);
+    expect(puedeAdministrar(ADMIN)).toBe(true);
 
     // RN-EMP-04: mientras esté EN_PREPARACION, solo quien lo tomó o ADMIN puede marcarlo LISTO/cancelarlo
     const pedidoEnPrep = {
@@ -456,5 +470,112 @@ describe("Panel de empleados · Reglas de roles, cliente tipado y errores proble
     expect(fallida.paradas?.[0].estado).toBe("FALLIDA");
     expect(fallida.paradas?.[0].estadoPedido).toBe("CANCELADO");
     expect(llamadas).toHaveLength(4);
+  });
+
+  it("CA_EMP_14 · consulta reporte de tiempos y exporta la tabla a CSV con escape RFC 4180", async () => {
+    const mockFetch = vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.includes("/api/v1/gestion/reportes/tiempos?desde=2026-11-01&hasta=2026-11-21")) {
+        return jsonResponse({
+          desde: "2026-11-01",
+          hasta: "2026-11-21",
+          sedeId: FARMACEUTICO.sedeId,
+          cantidadPedidosEntregados: 2,
+          promedioPreparacionMin: 20,
+          promedioEntregaMin: 30,
+          promedioTotalMin: 50,
+          porDia: [
+            {
+              fecha: "2026-11-20",
+              cantidadEntregados: 1,
+              promedioPreparacionMin: 10,
+              promedioEntregaMin: 20,
+              promedioTotalMin: 30,
+            },
+            {
+              fecha: "2026-11-21",
+              cantidadEntregados: 1,
+              promedioPreparacionMin: 30,
+              promedioEntregaMin: 40,
+              promedioTotalMin: 70,
+            },
+          ],
+          porModalidad: [],
+        });
+      }
+      throw new Error(`URL inesperada: ${url}`);
+    }) as unknown as typeof fetch;
+
+    const reporte = await farmaApi.obtenerReporteTiempos(
+      { desde: "2026-11-01", hasta: "2026-11-21" },
+      { token: "jwt-farm", fetchImpl: mockFetch }
+    );
+
+    expect(reporte.cantidadPedidosEntregados).toBe(2);
+    expect(reporte.promedioPreparacionMin).toBe(20);
+    expect(reporte.promedioEntregaMin).toBe(30);
+
+    const csv = generarCsv(
+      ["Fecha", "Pedidos entregados", "Promedio preparación (min)", "Promedio entrega (min)", "Nota"],
+      (reporte.porDia ?? []).map((fila) => [
+        fila.fecha,
+        fila.cantidadEntregados,
+        fila.promedioPreparacionMin,
+        fila.promedioEntregaMin,
+        'Sede "Centro", Medellín',
+      ])
+    );
+
+    expect(csv.startsWith("\uFEFF")).toBe(true);
+    expect(csv).toContain("Fecha,Pedidos entregados,Promedio preparación (min),Promedio entrega (min),Nota");
+    expect(csv).toContain('2026-11-20,1,10,20,"Sede ""Centro"", Medellín"');
+    expect(csv).toContain('2026-11-21,1,30,40,"Sede ""Centro"", Medellín"');
+  });
+
+  it("cliente tipado de administración (RF-EMP-30 a RF-EMP-34) y 403 en /admin/* para no ADMIN", async () => {
+    const eventoId = "12345678-1111-2222-3333-444444444444";
+    const mockFetch = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input);
+      const auth = new Headers(init?.headers).get("Authorization");
+      if (auth === "Bearer jwt-farm") {
+        return jsonResponse(
+          {
+            type: "https://farmagestion.co/errores/acceso-denegado",
+            title: "Acceso denegado",
+            status: 403,
+            detail: "No tiene permisos para realizar esta operación.",
+            code: "ACCESO_DENEGADO",
+          },
+          403,
+          "application/problem+json"
+        );
+      }
+      if (url.endsWith(`/api/v1/gestion/admin/integracion/eventos/${eventoId}/reintentar`)) {
+        return jsonResponse({
+          id: eventoId,
+          tipo: "DISPENSACION_FORMULA",
+          estado: "ENVIADO",
+          intentos: 1,
+          idempotencyKey: "ped-1",
+        });
+      }
+      throw new Error(`URL inesperada: ${url}`);
+    }) as unknown as typeof fetch;
+
+    await expect(
+      farmaApi.listarSedesAdmin({
+        token: "jwt-farm",
+        notifyGlobalError: false,
+        fetchImpl: mockFetch,
+      })
+    ).rejects.toSatisfy(
+      (err: unknown) => isApiError(err) && err.status === 403 && err.code === "ACCESO_DENEGADO"
+    );
+
+    const reintentado = await farmaApi.reintentarEventoIntegracionAdmin(eventoId, {
+      token: "jwt-admin",
+      fetchImpl: mockFetch,
+    });
+    expect(reintentado.estado).toBe("ENVIADO");
   });
 });

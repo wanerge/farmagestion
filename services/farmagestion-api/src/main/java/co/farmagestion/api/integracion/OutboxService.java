@@ -1,5 +1,7 @@
 package co.farmagestion.api.integracion;
 
+import co.farmagestion.api.common.web.ApiException;
+import co.farmagestion.api.common.web.PaginaResponse;
 import co.farmagestion.api.formulas.FormulaService;
 import co.farmagestion.api.formulas.ResultadoDispensacionSimulador;
 import co.farmagestion.api.formulas.SimuladorDispensacionRequest;
@@ -13,6 +15,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -25,6 +29,7 @@ import tools.jackson.databind.ObjectMapper;
 public class OutboxService {
 
 	public static final String TIPO_DISPENSACION_FORMULA = "DISPENSACION_FORMULA";
+	private static final int MAX_PAGE_SIZE = 100;
 
 	private static final Logger log = LoggerFactory.getLogger(OutboxService.class);
 
@@ -71,6 +76,58 @@ public class OutboxService {
 		evento.setIntentos(0);
 		evento.setIdempotencyKey(idempotencyKey);
 		eventoRepository.save(evento);
+	}
+
+	@Transactional(readOnly = true)
+	public PaginaResponse<EventoIntegracionResponse> listarEventos(
+			EstadoEventoIntegracion estado,
+			int page,
+			int size) {
+		int pagina = Math.max(0, page);
+		int tamano = Math.min(Math.max(1, size), MAX_PAGE_SIZE);
+		PageRequest pageable = PageRequest.of(pagina, tamano);
+
+		Page<EventoIntegracion> resultados = estado == null
+				? eventoRepository.findAllByOrderByCreatedAtDesc(pageable)
+				: eventoRepository.findAllByEstadoOrderByCreatedAtDesc(estado, pageable);
+
+		return PaginaResponse.of(resultados.map(EventoIntegracionResponse::from));
+	}
+
+	/**
+	 * Reintenta manualmente un evento en ERROR o PENDIENTE y ejecuta el envío de inmediato (RF-EMP-34).
+	 */
+	public EventoIntegracionResponse reintentarManual(UUID eventoId) {
+		transactionTemplate.executeWithoutResult(status -> {
+			EventoIntegracion evento = eventoRepository.findByIdForUpdate(eventoId)
+					.orElseThrow(() -> ApiException.notFound(
+							"EVENTO_INTEGRACION_NO_ENCONTRADO",
+							"Evento de integración no encontrado",
+							"No existe un evento de integración con el identificador indicado."));
+
+			if (evento.getEstado() == EstadoEventoIntegracion.ENVIADO) {
+				throw ApiException.conflict(
+						"EVENTO_YA_ENVIADO",
+						"Evento ya enviado",
+						"El evento de integración ya fue enviado exitosamente al simulador.");
+			}
+
+			if (evento.getEstado() == EstadoEventoIntegracion.ERROR) {
+				evento.setIntentos(0);
+			}
+			evento.setEstado(EstadoEventoIntegracion.PENDIENTE);
+			evento.setUltimoError(null);
+			eventoRepository.saveAndFlush(evento);
+		});
+
+		procesarUno(eventoId, Instant.now(clock));
+
+		EventoIntegracion actualizado = eventoRepository.findById(eventoId)
+				.orElseThrow(() -> ApiException.notFound(
+						"EVENTO_INTEGRACION_NO_ENCONTRADO",
+						"Evento de integración no encontrado",
+						"No existe un evento de integración con el identificador indicado."));
+		return EventoIntegracionResponse.from(actualizado);
 	}
 
 	/**

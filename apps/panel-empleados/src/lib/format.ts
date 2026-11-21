@@ -1,4 +1,6 @@
 import type {
+  CargoEmpleado,
+  EstadoEventoIntegracion,
   EstadoPedido,
   EstadoRuta,
   EstadoRutaParada,
@@ -11,12 +13,17 @@ import type {
 const ZONA_BOGOTA = "America/Bogota";
 
 export function fechaHoyBogota(): string {
+  return fechaHaceDiasBogota(0);
+}
+
+export function fechaHaceDiasBogota(diasAtras: number): string {
+  const fecha = new Date(Date.now() - diasAtras * 24 * 60 * 60 * 1000);
   const parts = new Intl.DateTimeFormat("en-CA", {
     timeZone: ZONA_BOGOTA,
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
-  }).formatToParts(new Date());
+  }).formatToParts(fecha);
 
   const year = parts.find((p) => p.type === "year")?.value ?? "2026";
   const month = parts.find((p) => p.type === "month")?.value ?? "01";
@@ -179,6 +186,29 @@ export function formatearDistanciaKm(km?: number | null): string {
   if (km === undefined || km === null || Number.isNaN(km)) return "0,00 km";
   return `${km.toFixed(2).replace(".", ",")} km`;
 }
+
+export function formatearMinutos(min?: number | null): string {
+  if (min === undefined || min === null || Number.isNaN(min)) return "0,0 min";
+  return `${min.toFixed(1).replace(".", ",")} min`;
+}
+
+export const ETIQUETA_ESTADO_OUTBOX: Record<EstadoEventoIntegracion, string> = {
+  PENDIENTE: "Pendiente",
+  ENVIADO: "Enviado",
+  ERROR: "Error",
+};
+
+export const CLASE_ESTADO_OUTBOX: Record<EstadoEventoIntegracion, string> = {
+  PENDIENTE: "bg-amber-100 text-amber-900 border-amber-200",
+  ENVIADO: "bg-emerald-100 text-emerald-800 border-emerald-200",
+  ERROR: "bg-rose-100 text-rose-800 border-rose-200",
+};
+
+export const ETIQUETA_CARGO: Record<CargoEmpleado, string> = {
+  FARMACEUTICO: "Farmacéutico",
+  AUXILIAR: "Auxiliar",
+  DOMICILIARIO: "Domiciliario",
+};
 
 export function acortarUuid(id?: string | null): string {
   if (!id) return "—";

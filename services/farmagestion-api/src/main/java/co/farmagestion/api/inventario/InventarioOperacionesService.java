@@ -1,8 +1,10 @@
 package co.farmagestion.api.inventario;
 
+import co.farmagestion.api.common.domain.ParametroService;
 import co.farmagestion.api.common.web.ApiException;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -22,15 +24,76 @@ public class InventarioOperacionesService {
 
 	private final InventarioRepository inventarioRepository;
 	private final MovimientoInventarioRepository movimientoRepository;
+	private final ParametroService parametroService;
 	private final ApplicationEventPublisher eventPublisher;
 
 	public InventarioOperacionesService(
 			InventarioRepository inventarioRepository,
 			MovimientoInventarioRepository movimientoRepository,
+			ParametroService parametroService,
 			ApplicationEventPublisher eventPublisher) {
 		this.inventarioRepository = inventarioRepository;
 		this.movimientoRepository = movimientoRepository;
+		this.parametroService = parametroService;
 		this.eventPublisher = eventPublisher;
+	}
+
+	/**
+	 * Crea registros de inventario en cero para el medicamento en cada sede activa indicada (RF-EMP-32).
+	 */
+	@Transactional
+	public int inicializarInventarioEnCeroParaSedes(UUID medicamentoId, Collection<UUID> sedeIds) {
+		if (medicamentoId == null || sedeIds == null || sedeIds.isEmpty()) {
+			return 0;
+		}
+		int stockMinimo = Math.max(0, parametroService.obtenerEntero(
+				ParametroService.INVENTARIO_STOCK_MINIMO_DEFAULT, 10));
+		int creados = 0;
+		for (UUID sedeId : sedeIds) {
+			if (inventarioRepository.findBySedeIdAndMedicamentoId(sedeId, medicamentoId).isEmpty()) {
+				Inventario inv = new Inventario();
+				inv.setSedeId(sedeId);
+				inv.setMedicamentoId(medicamentoId);
+				inv.setCantidadFisica(0);
+				inv.setCantidadReservada(0);
+				inv.setStockMinimo(stockMinimo);
+				inventarioRepository.save(inv);
+				creados++;
+			}
+		}
+		if (creados > 0) {
+			inventarioRepository.flush();
+		}
+		return creados;
+	}
+
+	/**
+	 * Crea registros de inventario en cero para los medicamentos indicados en una nueva sede activa.
+	 */
+	@Transactional
+	public int inicializarInventarioEnCeroParaMedicamentos(UUID sedeId, Collection<UUID> medicamentoIds) {
+		if (sedeId == null || medicamentoIds == null || medicamentoIds.isEmpty()) {
+			return 0;
+		}
+		int stockMinimo = Math.max(0, parametroService.obtenerEntero(
+				ParametroService.INVENTARIO_STOCK_MINIMO_DEFAULT, 10));
+		int creados = 0;
+		for (UUID medicamentoId : medicamentoIds) {
+			if (inventarioRepository.findBySedeIdAndMedicamentoId(sedeId, medicamentoId).isEmpty()) {
+				Inventario inv = new Inventario();
+				inv.setSedeId(sedeId);
+				inv.setMedicamentoId(medicamentoId);
+				inv.setCantidadFisica(0);
+				inv.setCantidadReservada(0);
+				inv.setStockMinimo(stockMinimo);
+				inventarioRepository.save(inv);
+				creados++;
+			}
+		}
+		if (creados > 0) {
+			inventarioRepository.flush();
+		}
+		return creados;
 	}
 
 	@Transactional
