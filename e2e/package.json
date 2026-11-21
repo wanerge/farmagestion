@@ -1,0 +1,16 @@
+{
+  "name": "farmagestion-e2e",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Pruebas E2E con Playwright del flujo completo H1 de FarmaGestión",
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "report": "playwright show-report"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.52.0",
+    "@types/node": "^20",
+    "typescript": "^5"
+  }
+}

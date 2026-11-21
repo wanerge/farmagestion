@@ -12,13 +12,16 @@ target/
 *.ear
 *.log
 
-# Node / Next.js
+# Node / Next.js / Playwright
 node_modules/
 .next/
 out/
 dist/
 .vercel/
 *.tsbuildinfo
+playwright-report/
+test-results/
+blob-report/
 
 # IDEs y SO
 .idea/
