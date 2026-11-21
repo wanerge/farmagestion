@@ -52,8 +52,41 @@ public class CatalogoConsultaService {
 	}
 
 	@Transactional(readOnly = true)
+	public Optional<MedicamentoPublicoResponse> obtenerMedicamentoPorCodigo(String codigo) {
+		if (codigo == null || codigo.isBlank()) {
+			return Optional.empty();
+		}
+		return medicamentoRepository.findByCodigoIgnoreCase(codigo.trim()).map(MedicamentoPublicoResponse::from);
+	}
+
+	@Transactional(readOnly = true)
+	public Map<String, MedicamentoPublicoResponse> obtenerMedicamentosPorCodigos(Collection<String> codigos) {
+		if (codigos == null || codigos.isEmpty()) {
+			return Collections.emptyMap();
+		}
+		Map<String, MedicamentoPublicoResponse> mapa = new LinkedHashMap<>();
+		for (Medicamento m : medicamentoRepository.findAllByCodigoIn(codigos)) {
+			mapa.put(m.getCodigo(), MedicamentoPublicoResponse.from(m));
+		}
+		return mapa;
+	}
+
+	@Transactional(readOnly = true)
 	public Optional<SedePublicaResponse> obtenerSedePorId(UUID sedeId) {
 		return sedeRepository.findById(sedeId).map(SedePublicaResponse::from);
+	}
+
+	@Transactional(readOnly = true)
+	public Optional<SedePublicaResponse> obtenerSedeActivaPorId(UUID sedeId) {
+		return sedeRepository.findByIdAndActivaTrue(sedeId).map(SedePublicaResponse::from);
+	}
+
+	@Transactional(readOnly = true)
+	public Optional<SedePublicaResponse> obtenerSedePorCodigo(String codigo) {
+		if (codigo == null || codigo.isBlank()) {
+			return Optional.empty();
+		}
+		return sedeRepository.findByCodigoIgnoreCase(codigo.trim()).map(SedePublicaResponse::from);
 	}
 
 	@Transactional(readOnly = true)

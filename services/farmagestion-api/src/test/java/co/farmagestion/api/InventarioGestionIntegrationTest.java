@@ -265,7 +265,8 @@ class InventarioGestionIntegrationTest {
 				"UPDATE inventario SET cantidad_fisica = 12, cantidad_reservada = 0, stock_minimo = 10 WHERE sede_id = ? AND medicamento_id = ?",
 				sedeCentroId, medId);
 
-		// 1. Reserva de 3 -> disponible baja de 12 a 9 (cruza <= 10) -> dispara 1 evento
+		// 1. Reserva de 3 -> disponible baja de 12 a 9 (cruza <= 10) -> dispara 1 evento y 1 notificación STOCK_BAJO
+		jdbcTemplate.update("DELETE FROM notificacion WHERE tipo = 'STOCK_BAJO' AND referencia_id = ?", medId);
 		operacionesService.reservar(
 				sedeCentroId,
 				List.of(new SolicitudStockItem(medId, 3)),
@@ -281,6 +282,11 @@ class InventarioGestionIntegrationTest {
 		assertThat(primerEvento.disponibleActual()).isEqualTo(9);
 		assertThat(primerEvento.stockMinimo()).isEqualTo(10);
 
+		Integer notifDespuesPrimero = jdbcTemplate.queryForObject(
+				"SELECT COUNT(*) FROM notificacion WHERE usuario_id = ? AND tipo = 'STOCK_BAJO' AND referencia_id = ?",
+				Integer.class, farmaceuticoId, medId);
+		assertThat(notifDespuesPrimero).isEqualTo(1);
+
 		// 2. Segunda reserva de 2 -> disponible baja de 9 a 7 (ya estaba <= 10) -> NO repite
 		operacionesService.reservar(
 				sedeCentroId,
@@ -290,6 +296,15 @@ class InventarioGestionIntegrationTest {
 				UUID.randomUUID(),
 				farmaceuticoId);
 		assertThat(stockBajoEventCaptor.getEventos()).hasSize(1);
+		Integer notifDespuesSegundo = jdbcTemplate.queryForObject(
+				"SELECT COUNT(*) FROM notificacion WHERE usuario_id = ? AND tipo = 'STOCK_BAJO' AND referencia_id = ?",
+				Integer.class, farmaceuticoId, medId);
+		assertThat(notifDespuesSegundo).isEqualTo(1);
+
+		mockMvc.perform(get("/api/v1/gestion/notificaciones")
+						.header("Authorization", "Bearer " + tokenFarmaceutico))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.content[0].tipo").value("STOCK_BAJO"));
 
 		// 3. Entrada de 10 -> disponible sube a 17 (> 10); luego reserva de 7 -> disponible cae a 10 (nuevo cruce)
 		mockMvc.perform(post("/api/v1/gestion/inventario/{medId}/entradas", medId)

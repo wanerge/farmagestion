@@ -32,6 +32,15 @@ app:
   integracion:
     eps-simulador-url: ${EPS_SIMULADOR_URL:http://localhost:3000}
     eps-simulador-api-key: ${EPS_SIMULADOR_API_KEY:local-dev-api-key}
+    timeout-segundos: 10
+    outbox-backoff-base-segundos: 60
+    outbox-max-intentos: 10
+  scheduling:
+    enabled: ${APP_SCHEDULING_ENABLED:true}
+    expirar-reservas-ms: 60000
+    vencer-turnos-ms: 300000
+    reintentar-outbox-ms: 60000
+    sincronizar-formulas-ms: 3600000
 
 management:
   endpoints:

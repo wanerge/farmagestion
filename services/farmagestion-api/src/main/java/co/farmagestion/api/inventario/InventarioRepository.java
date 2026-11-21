@@ -34,5 +34,7 @@ interface InventarioRepository extends JpaRepository<Inventario, UUID>, JpaSpeci
 
 	List<Inventario> findAllByMedicamentoId(UUID medicamentoId);
 
+	List<Inventario> findAllByMedicamentoIdIn(Collection<UUID> medicamentoIds);
+
 	Optional<Inventario> findBySedeIdAndMedicamentoId(UUID sedeId, UUID medicamentoId);
 }

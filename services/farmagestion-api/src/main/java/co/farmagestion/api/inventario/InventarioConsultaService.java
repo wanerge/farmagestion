@@ -1,5 +1,7 @@
 package co.farmagestion.api.inventario;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,5 +31,22 @@ public class InventarioConsultaService {
 					NivelDisponibilidad.calcular(registro.getDisponible(), registro.getStockMinimo()));
 		}
 		return niveles;
+	}
+
+	@Transactional(readOnly = true)
+	public Map<UUID, Map<UUID, NivelDisponibilidad>> obtenerNivelesPorMedicamentos(Collection<UUID> medicamentoIds) {
+		if (medicamentoIds == null || medicamentoIds.isEmpty()) {
+			return Collections.emptyMap();
+		}
+		List<Inventario> registros = inventarioRepository.findAllByMedicamentoIdIn(medicamentoIds);
+		Map<UUID, Map<UUID, NivelDisponibilidad>> porMedicamento = new HashMap<>();
+		for (Inventario registro : registros) {
+			porMedicamento
+					.computeIfAbsent(registro.getMedicamentoId(), k -> new HashMap<>())
+					.put(
+							registro.getSedeId(),
+							NivelDisponibilidad.calcular(registro.getDisponible(), registro.getStockMinimo()));
+		}
+		return porMedicamento;
 	}
 }

@@ -1,8 +1,13 @@
 package co.farmagestion.api.auth;
 
 import co.farmagestion.api.common.web.ApiException;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -196,6 +201,33 @@ public class AuthService {
 	@Transactional(readOnly = true)
 	public List<UUID> obtenerEmpleadosActivosDeSede(UUID sedeId) {
 		return empleadoRepository.findUsuarioIdsActivosBySedeId(sedeId);
+	}
+
+	@Transactional(readOnly = true)
+	public List<UUID> obtenerAdminsActivos() {
+		return usuarioRepository.findIdsActivosByRol(RolUsuario.ADMIN);
+	}
+
+	@Transactional(readOnly = true)
+	public Optional<PacienteResumen> obtenerPaciente(UUID usuarioId) {
+		return pacienteRepository.findByUsuarioId(usuarioId).map(PacienteResumen::from);
+	}
+
+	@Transactional(readOnly = true)
+	public Map<UUID, PacienteResumen> obtenerPacientesPorIds(Collection<UUID> usuarioIds) {
+		if (usuarioIds == null || usuarioIds.isEmpty()) {
+			return Collections.emptyMap();
+		}
+		Map<UUID, PacienteResumen> mapa = new LinkedHashMap<>();
+		for (Paciente p : pacienteRepository.findAllByUsuarioIdIn(usuarioIds)) {
+			mapa.put(p.getUsuarioId(), PacienteResumen.from(p));
+		}
+		return mapa;
+	}
+
+	@Transactional(readOnly = true)
+	public Optional<EmpleadoResumen> obtenerEmpleado(UUID usuarioId) {
+		return empleadoRepository.findByUsuarioId(usuarioId).map(EmpleadoResumen::from);
 	}
 
 	private PerfilPacienteResponse toPerfilResponse(Usuario usuario, Paciente paciente) {

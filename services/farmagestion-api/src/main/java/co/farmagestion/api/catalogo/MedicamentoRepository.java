@@ -16,6 +16,10 @@ interface MedicamentoRepository extends JpaRepository<Medicamento, UUID> {
 
 	List<Medicamento> findAllByIdIn(Collection<UUID> ids);
 
+	Optional<Medicamento> findByCodigoIgnoreCase(String codigo);
+
+	List<Medicamento> findAllByCodigoIn(Collection<String> codigos);
+
 	@Query(
 			value = """
 					SELECT * FROM medicamento m

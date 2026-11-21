@@ -1,0 +1,2757 @@
+{
+  "openapi" : "3.1.0",
+  "info" : {
+    "title" : "FarmaGestión API",
+    "description" : "API REST de FarmaGestión S.A.S. (simulación de inventario, catálogo, pedidos y turnos).",
+    "version" : "v1"
+  },
+  "servers" : [ {
+    "url" : "http://localhost",
+    "description" : "Generated server url"
+  } ],
+  "tags" : [ {
+    "name" : "Pedidos del paciente",
+    "description" : "Creación con reserva atómica, seguimiento, línea de tiempo y cancelación de pedidos (RF-PAC-10 a RF-PAC-16)"
+  }, {
+    "name" : "Gestión de pedidos",
+    "description" : "Bandeja operativa, preparación, entrega con verificación de documento y cancelación por sede (RF-EMP-08 a RF-EMP-12)"
+  }, {
+    "name" : "Autenticación",
+    "description" : "Registro de pacientes e inicio de sesión con JWT HS256"
+  }, {
+    "name" : "Turnos del paciente",
+    "description" : "Consulta de franjas horarias con cupo para recoger en sede (RF-PAC-11, RN-PAC-05)"
+  }, {
+    "name" : "Notificaciones de gestión",
+    "description" : "Alertas de stock bajo, nuevos pedidos y errores de integración para empleados y administradores (RF-EMP-25 a RF-EMP-27)"
+  }, {
+    "name" : "Notificaciones del paciente",
+    "description" : "Consulta y lectura de notificaciones in-app del paciente (RF-PAC-17, RF-PAC-18)"
+  }, {
+    "name" : "Pantalla pública de sala",
+    "description" : "Consulta pública sin autenticación ni datos personales de turnos llamados y en espera (RF-EMP-18, CA-EMP-10)"
+  }, {
+    "name" : "Gestión de turnos",
+    "description" : "Cola de turnos del día, llamado al siguiente turno y vencimiento por no presentación (RF-EMP-15 a RF-EMP-17)"
+  }, {
+    "name" : "Catálogo público",
+    "description" : "Consulta pública de medicamentos, sedes y disponibilidad por niveles (RN-10, RF-PAC-04, RF-PAC-05)"
+  }, {
+    "name" : "Gestión de inventario",
+    "description" : "Consulta de inventario, entradas, ajustes, stock mínimo y kárdex por sede (RF-EMP-03 a RF-EMP-07)"
+  }, {
+    "name" : "Perfil del paciente",
+    "description" : "Consulta y edición de perfil del paciente autenticado (RF-PAC-03)"
+  }, {
+    "name" : "Fórmulas del paciente",
+    "description" : "Vinculación, consulta con saldos, matriz de disponibilidad y descarga de PDF de fórmulas (RF-PAC-06 a RF-PAC-09)"
+  } ],
+  "paths" : {
+    "/api/v1/pacientes/me" : {
+      "get" : {
+        "tags" : [ "Perfil del paciente" ],
+        "summary" : "Consultar perfil del paciente",
+        "operationId" : "obtenerPerfil",
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PerfilPacienteResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      },
+      "put" : {
+        "tags" : [ "Perfil del paciente" ],
+        "summary" : "Actualizar teléfono o contraseña del paciente",
+        "description" : "El documento del paciente no es editable (RF-PAC-03).",
+        "operationId" : "actualizarPerfil",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ActualizarPerfilPacienteRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PerfilPacienteResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/api/v1/pacientes/me/pedidos" : {
+      "get" : {
+        "tags" : [ "Pedidos del paciente" ],
+        "summary" : "Listar historial de pedidos",
+        "description" : "Historial paginado de pedidos del paciente con filtro opcional por estado (RF-PAC-16).",
+        "operationId" : "listar",
+        "parameters" : [ {
+          "name" : "estado",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "enum" : [ "RESERVADO", "EN_PREPARACION", "LISTO", "EN_RUTA", "ENTREGADO", "CANCELADO", "VENCIDO" ]
+          }
+        }, {
+          "name" : "page",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 0
+          }
+        }, {
+          "name" : "size",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 20
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PaginaResponsePedidoResumenResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      },
+      "post" : {
+        "tags" : [ "Pedidos del paciente" ],
+        "summary" : "Crear pedido",
+        "description" : "Refresca la fórmula (RN-04), reserva stock atómicamente (RN-01, RN-02, RN-03) y genera turno si la modalidad es RECOGER (RF-PAC-10 a RF-PAC-13).",
+        "operationId" : "crear",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CrearPedidoRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Created",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PedidoDetalleResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/api/v1/pacientes/me/pedidos/{id}/cancelar" : {
+      "post" : {
+        "tags" : [ "Pedidos del paciente" ],
+        "summary" : "Cancelar pedido",
+        "description" : "Cancela un pedido en estado RESERVADO, EN_PREPARACION o LISTO, libera stock y cancela el turno (RF-PAC-15, RN-PAC-06).",
+        "operationId" : "cancelar",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/NotaOpcionalRequest"
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PedidoDetalleResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/api/v1/pacientes/me/notificaciones/{id}/leer" : {
+      "post" : {
+        "tags" : [ "Notificaciones del paciente" ],
+        "summary" : "Marcar notificación como leída",
+        "description" : "Marca como leída una notificación propia del paciente.",
+        "operationId" : "marcarLeida",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/NotificacionResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/api/v1/pacientes/me/formulas" : {
+      "get" : {
+        "tags" : [ "Fórmulas del paciente" ],
+        "summary" : "Listar fórmulas vinculadas",
+        "description" : "Lista las fórmulas vinculadas del paciente con su vigencia e ítems con saldo pendiente (RF-PAC-07, RN-03).",
+        "operationId" : "listar_1",
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/FormulaResumenResponse"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      },
+      "post" : {
+        "tags" : [ "Fórmulas del paciente" ],
+        "summary" : "Vincular fórmula",
+        "description" : "Valida la fórmula contra el simulador EPS usando el documento del paciente y guarda la copia local (RF-PAC-06, RN-04, RN-PAC-01, RN-PAC-02).",
+        "operationId" : "vincular",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/VincularFormulaRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Created",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/FormulaDetalleResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/api/v1/gestion/turnos/{id}/vencer" : {
+      "post" : {
+        "tags" : [ "Gestión de turnos" ],
+        "summary" : "Marcar turno como vencido",
+        "description" : "Marca un turno como VENCIDO por no presentación del paciente, venciendo también el pedido con liberación de stock (RF-EMP-17).",
+        "operationId" : "vencerTurno",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TurnoResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/api/v1/gestion/turnos/llamar-siguiente" : {
+      "post" : {
+        "tags" : [ "Gestión de turnos" ],
+        "summary" : "Llamar siguiente turno",
+        "description" : "Pasa el primer turno EN_ESPERA de la sede a LLAMADO y notifica al paciente (RF-EMP-16, CA-EMP-10).",
+        "operationId" : "llamarSiguiente",
+        "parameters" : [ {
+          "name" : "sedeId",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "name" : "fecha",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TurnoResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/api/v1/gestion/pedidos/{id}/tomar" : {
+      "post" : {
+        "tags" : [ "Gestión de pedidos" ],
+        "summary" : "Tomar pedido para preparación",
+        "description" : "Transiciona el pedido de RESERVADO a EN_PREPARACION y lo asigna al empleado autenticado (RF-EMP-10, RN-EMP-01, RN-EMP-04).",
+        "operationId" : "tomar",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/NotaOpcionalRequest"
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PedidoDetalleResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/api/v1/gestion/pedidos/{id}/listo" : {
+      "post" : {
+        "tags" : [ "Gestión de pedidos" ],
+        "summary" : "Marcar pedido como listo",
+        "description" : "Transiciona el pedido de EN_PREPARACION a LISTO; solo quien lo tomó o un ADMIN puede ejecutarlo (RF-EMP-10, RN-EMP-04).",
+        "operationId" : "marcarListo",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/NotaOpcionalRequest"
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PedidoDetalleResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/api/v1/gestion/pedidos/{id}/entregar" : {
+      "post" : {
+        "tags" : [ "Gestión de pedidos" ],
+        "summary" : "Entregar pedido RECOGER",
+        "description" : "Verifica el documento del paciente (RN-EMP-02), dispensa el stock, marca el turno ATENDIDO y encola la dispensación en el outbox (RF-EMP-11, RN-06).",
+        "operationId" : "entregar",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/EntregarPedidoRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PedidoDetalleResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/api/v1/gestion/pedidos/{id}/cancelar" : {
+      "post" : {
+        "tags" : [ "Gestión de pedidos" ],
+        "summary" : "Cancelar pedido desde gestión",
+        "description" : "Cancela un pedido antes de ENTREGADO con motivo obligatorio, libera stock, cancela turno y notifica al paciente (RF-EMP-12).",
+        "operationId" : "cancelar_1",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CancelarPedidoGestionRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PedidoDetalleResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/api/v1/gestion/notificaciones/{id}/leer" : {
+      "post" : {
+        "tags" : [ "Notificaciones de gestión" ],
+        "summary" : "Marcar notificación como leída",
+        "description" : "Marca como leída una notificación propia del empleado o administrador.",
+        "operationId" : "marcarLeida_1",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/NotificacionResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/api/v1/gestion/inventario/{medicamentoId}/entradas" : {
+      "post" : {
+        "tags" : [ "Gestión de inventario" ],
+        "summary" : "Registrar entrada de stock",
+        "description" : "Incrementa la cantidad física y registra un movimiento ENTRADA en el kárdex (RF-EMP-04, CA-EMP-02).",
+        "operationId" : "registrarEntrada",
+        "parameters" : [ {
+          "name" : "medicamentoId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "name" : "sedeId",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/EntradaStockRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/InventarioItemResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/api/v1/gestion/inventario/{medicamentoId}/ajustes" : {
+      "post" : {
+        "tags" : [ "Gestión de inventario" ],
+        "summary" : "Registrar ajuste de stock",
+        "description" : "Registra un ajuste positivo o negativo con motivo obligatorio; nunca deja físico menor que reservado sin resolver (RF-EMP-05, CA-EMP-03).",
+        "operationId" : "registrarAjuste",
+        "parameters" : [ {
+          "name" : "medicamentoId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "name" : "sedeId",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/AjusteStockRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/InventarioItemResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/api/v1/auth/registro" : {
+      "post" : {
+        "tags" : [ "Autenticación" ],
+        "summary" : "Registrar paciente",
+        "description" : "Crea una cuenta de paciente (RF-PAC-01) y retorna un token JWT.",
+        "operationId" : "registrarPaciente",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/RegistroPacienteRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Created",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AuthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/login" : {
+      "post" : {
+        "tags" : [ "Autenticación" ],
+        "summary" : "Iniciar sesión",
+        "description" : "Autentica un paciente, empleado o administrador y retorna un JWT HS256 válido por 2 horas (RF-PAC-02, RF-EMP-01).",
+        "operationId" : "login",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/LoginRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AuthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/gestion/inventario/{medicamentoId}" : {
+      "patch" : {
+        "tags" : [ "Gestión de inventario" ],
+        "summary" : "Editar stock mínimo",
+        "description" : "Actualiza el stock mínimo de un medicamento en la sede (RF-EMP-07).",
+        "operationId" : "actualizarStockMinimo",
+        "parameters" : [ {
+          "name" : "medicamentoId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "name" : "sedeId",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ActualizarStockMinimoRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/InventarioItemResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/api/v1/pacientes/me/sedes/{sedeId}/franjas" : {
+      "get" : {
+        "tags" : [ "Turnos del paciente" ],
+        "summary" : "Consultar franjas con cupo",
+        "description" : "Devuelve las franjas horarias de la sede para la fecha indicada (por defecto hoy) respetando horario, anticipación de 60 minutos y capacidad (RN-PAC-05).",
+        "operationId" : "consultarFranjas",
+        "parameters" : [ {
+          "name" : "sedeId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "name" : "fecha",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/FranjasDisponiblesResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/api/v1/pacientes/me/pedidos/{id}" : {
+      "get" : {
+        "tags" : [ "Pedidos del paciente" ],
+        "summary" : "Ver detalle del pedido",
+        "description" : "Evalúa vencimiento perezoso (RN-05) y devuelve detalle, ítems, turno y línea de tiempo (RF-PAC-14, RN-PAC-07).",
+        "operationId" : "detalle",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PedidoDetalleResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/api/v1/pacientes/me/notificaciones" : {
+      "get" : {
+        "tags" : [ "Notificaciones del paciente" ],
+        "summary" : "Listar notificaciones",
+        "description" : "Devuelve notificaciones paginadas del paciente y contador de no leídas (RF-PAC-18).",
+        "operationId" : "listar_2",
+        "parameters" : [ {
+          "name" : "soloNoLeidas",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean"
+          }
+        }, {
+          "name" : "page",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 0
+          }
+        }, {
+          "name" : "size",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 20
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/NotificacionesListadoResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/api/v1/pacientes/me/formulas/{id}" : {
+      "get" : {
+        "tags" : [ "Fórmulas del paciente" ],
+        "summary" : "Ver detalle de fórmula",
+        "description" : "Refresca desde el simulador si está disponible y devuelve detalle con saldos pendientes y matriz de disponibilidad por sede (RF-PAC-07, RF-PAC-09).",
+        "operationId" : "detalle_1",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/FormulaDetalleResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/api/v1/pacientes/me/formulas/{id}/pdf" : {
+      "get" : {
+        "tags" : [ "Fórmulas del paciente" ],
+        "summary" : "Descargar PDF de la fórmula",
+        "description" : "Obtiene del simulador EPS el documento PDF simulado de la fórmula autenticada (RF-PAC-08, CA-PAC-12).",
+        "operationId" : "descargarPdf",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/pdf" : {
+                "schema" : {
+                  "type" : "string",
+                  "format" : "byte"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/api/v1/health" : {
+      "get" : {
+        "tags" : [ "health-controller" ],
+        "operationId" : "health",
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "object",
+                  "additionalProperties" : { }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/gestion/turnos" : {
+      "get" : {
+        "tags" : [ "Gestión de turnos" ],
+        "summary" : "Consultar cola de turnos",
+        "description" : "Lista los turnos de la sede para la fecha indicada (por defecto hoy), ordenados por franja y número (RF-EMP-15).",
+        "operationId" : "listarCola",
+        "parameters" : [ {
+          "name" : "sedeId",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "name" : "fecha",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/TurnoResponse"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/api/v1/gestion/public/sala/{sedeCodigo}" : {
+      "get" : {
+        "tags" : [ "Pantalla pública de sala" ],
+        "summary" : "Consultar pantalla de sala",
+        "description" : "Retorna los códigos de turnos llamados y en espera de la sede sin datos personales.",
+        "operationId" : "consultarSala",
+        "parameters" : [ {
+          "name" : "sedeCodigo",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "fecha",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PantallaSalaResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/gestion/pedidos" : {
+      "get" : {
+        "tags" : [ "Gestión de pedidos" ],
+        "summary" : "Listar bandeja de pedidos",
+        "description" : "Lista paginada de pedidos de la sede filtrados por estado, modalidad y fecha, ordenados por urgencia de vencimiento (RF-EMP-08, RN-09).",
+        "operationId" : "listar_3",
+        "parameters" : [ {
+          "name" : "sedeId",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "name" : "estado",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "enum" : [ "RESERVADO", "EN_PREPARACION", "LISTO", "EN_RUTA", "ENTREGADO", "CANCELADO", "VENCIDO" ]
+          }
+        }, {
+          "name" : "modalidad",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "enum" : [ "RECOGER", "DOMICILIO" ]
+          }
+        }, {
+          "name" : "fecha",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        }, {
+          "name" : "page",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 0
+          }
+        }, {
+          "name" : "size",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 20
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PaginaResponsePedidoResumenResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/api/v1/gestion/pedidos/{id}" : {
+      "get" : {
+        "tags" : [ "Gestión de pedidos" ],
+        "summary" : "Consultar detalle de pedido",
+        "description" : "Evalúa vencimiento perezoso y devuelve el detalle completo del pedido, paciente, fórmula, turno e historial (RF-EMP-09).",
+        "operationId" : "detalle_2",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PedidoDetalleResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/api/v1/gestion/notificaciones" : {
+      "get" : {
+        "tags" : [ "Notificaciones de gestión" ],
+        "summary" : "Listar notificaciones",
+        "description" : "Devuelve notificaciones paginadas del empleado o administrador autenticado y contador de no leídas.",
+        "operationId" : "listar_4",
+        "parameters" : [ {
+          "name" : "soloNoLeidas",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean"
+          }
+        }, {
+          "name" : "page",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 0
+          }
+        }, {
+          "name" : "size",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 20
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/NotificacionesListadoResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/api/v1/gestion/inventario" : {
+      "get" : {
+        "tags" : [ "Gestión de inventario" ],
+        "summary" : "Listar inventario",
+        "description" : "Lista paginada del inventario con búsqueda por nombre y filtros bajoMinimo y agotado (RF-EMP-03). Respeta el alcance por sede (RN-09).",
+        "operationId" : "listarInventario",
+        "parameters" : [ {
+          "name" : "sedeId",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "name" : "q",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "bajoMinimo",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean"
+          }
+        }, {
+          "name" : "agotado",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean"
+          }
+        }, {
+          "name" : "page",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 0
+          }
+        }, {
+          "name" : "size",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 20
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PaginaResponseInventarioItemResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/api/v1/gestion/inventario/{medicamentoId}/kardex" : {
+      "get" : {
+        "tags" : [ "Gestión de inventario" ],
+        "summary" : "Consultar kárdex",
+        "description" : "Lista paginada de movimientos de inventario de un medicamento en la sede con filtros por tipo y fecha (RF-EMP-06).",
+        "operationId" : "consultarKardex",
+        "parameters" : [ {
+          "name" : "medicamentoId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "name" : "sedeId",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "name" : "tipo",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "enum" : [ "ENTRADA", "AJUSTE_POS", "AJUSTE_NEG", "RESERVA", "LIBERACION", "DISPENSACION", "TRASLADO_SALIDA", "TRASLADO_ENTRADA" ]
+          }
+        }, {
+          "name" : "desde",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "hasta",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "page",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 0
+          }
+        }, {
+          "name" : "size",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 20
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PaginaResponseMovimientoKardexResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/api/v1/catalogo/sedes" : {
+      "get" : {
+        "tags" : [ "Catálogo público" ],
+        "summary" : "Listar sedes activas",
+        "description" : "Retorna las sedes activas con dirección, horario y coordenadas para mapa (RF-PAC-05).",
+        "operationId" : "listarSedes",
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/SedePublicaResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/catalogo/medicamentos" : {
+      "get" : {
+        "tags" : [ "Catálogo público" ],
+        "summary" : "Buscar medicamentos",
+        "description" : "Búsqueda pública paginada de medicamentos activos por nombre, principio activo o código.",
+        "operationId" : "buscarMedicamentos",
+        "parameters" : [ {
+          "name" : "q",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "page",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 0
+          }
+        }, {
+          "name" : "size",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 20
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PaginaResponseMedicamentoPublicoResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/catalogo/medicamentos/{id}/disponibilidad" : {
+      "get" : {
+        "tags" : [ "Catálogo público" ],
+        "summary" : "Consultar disponibilidad por sede",
+        "description" : "Retorna el nivel de disponibilidad (DISPONIBLE, POCAS_UNIDADES, AGOTADO) en cada sede activa sin exponer cantidades exactas (RN-10).",
+        "operationId" : "consultarDisponibilidad",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/DisponibilidadMedicamentoResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components" : {
+    "schemas" : {
+      "ActualizarPerfilPacienteRequest" : {
+        "type" : "object",
+        "properties" : {
+          "telefono" : {
+            "type" : "string",
+            "maxLength" : 30,
+            "minLength" : 0
+          },
+          "passwordActual" : {
+            "type" : "string"
+          },
+          "passwordNueva" : {
+            "type" : "string",
+            "maxLength" : 100,
+            "minLength" : 8
+          }
+        }
+      },
+      "PerfilPacienteResponse" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "email" : {
+            "type" : "string"
+          },
+          "tipoDocumento" : {
+            "type" : "string"
+          },
+          "documento" : {
+            "type" : "string"
+          },
+          "nombres" : {
+            "type" : "string"
+          },
+          "apellidos" : {
+            "type" : "string"
+          },
+          "telefono" : {
+            "type" : "string"
+          }
+        }
+      },
+      "CrearPedidoRequest" : {
+        "type" : "object",
+        "properties" : {
+          "formulaId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "sedeId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "modalidad" : {
+            "type" : "string",
+            "enum" : [ "RECOGER", "DOMICILIO" ]
+          },
+          "franjaInicio" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "direccionEntrega" : {
+            "type" : "string",
+            "maxLength" : 255,
+            "minLength" : 0
+          },
+          "latitudEntrega" : {
+            "type" : "number"
+          },
+          "longitudEntrega" : {
+            "type" : "number"
+          },
+          "aceptaParcial" : {
+            "type" : "boolean"
+          },
+          "items" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ItemSolicitud"
+            },
+            "minItems" : 1
+          }
+        },
+        "required" : [ "formulaId", "items", "modalidad", "sedeId" ]
+      },
+      "ItemSolicitud" : {
+        "type" : "object",
+        "properties" : {
+          "medicamentoId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "cantidad" : {
+            "type" : "integer",
+            "format" : "int32",
+            "minimum" : 1
+          }
+        },
+        "required" : [ "medicamentoId" ]
+      },
+      "PedidoDetalleResponse" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "codigo" : {
+            "type" : "string"
+          },
+          "estado" : {
+            "type" : "string",
+            "enum" : [ "RESERVADO", "EN_PREPARACION", "LISTO", "EN_RUTA", "ENTREGADO", "CANCELADO", "VENCIDO" ]
+          },
+          "modalidad" : {
+            "type" : "string",
+            "enum" : [ "RECOGER", "DOMICILIO" ]
+          },
+          "esParcial" : {
+            "type" : "boolean"
+          },
+          "sedeId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "sedeCodigo" : {
+            "type" : "string"
+          },
+          "sedeNombre" : {
+            "type" : "string"
+          },
+          "formulaId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "formulaCodigo" : {
+            "type" : "string"
+          },
+          "pacienteId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "pacienteNombre" : {
+            "type" : "string"
+          },
+          "pacienteTipoDocumento" : {
+            "type" : "string"
+          },
+          "pacienteDocumento" : {
+            "type" : "string"
+          },
+          "pacienteTelefono" : {
+            "type" : "string"
+          },
+          "direccionEntrega" : {
+            "type" : "string"
+          },
+          "latitudEntrega" : {
+            "type" : "number"
+          },
+          "longitudEntrega" : {
+            "type" : "number"
+          },
+          "intentosEntrega" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "asignadoA" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "expiraEn" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "updatedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "listoEn" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "entregadoEn" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "turno" : {
+            "$ref" : "#/components/schemas/TurnoResponse"
+          },
+          "items" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/PedidoItemResponse"
+            }
+          },
+          "historial" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/PedidoHistorialResponse"
+            }
+          }
+        }
+      },
+      "PedidoHistorialResponse" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "estadoAnterior" : {
+            "type" : "string"
+          },
+          "estadoNuevo" : {
+            "type" : "string"
+          },
+          "usuarioId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "nota" : {
+            "type" : "string"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        }
+      },
+      "PedidoItemResponse" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "medicamentoId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "medicamentoCodigo" : {
+            "type" : "string"
+          },
+          "medicamentoNombre" : {
+            "type" : "string"
+          },
+          "presentacion" : {
+            "type" : "string"
+          },
+          "cantidadSolicitada" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "cantidadReservada" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "cantidadEntregada" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "estadoItem" : {
+            "type" : "string",
+            "enum" : [ "COMPLETO", "PARCIAL", "AGOTADO" ]
+          }
+        }
+      },
+      "TurnoResponse" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "pedidoId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "sedeId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "fecha" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "franjaInicio" : {
+            "type" : "string",
+            "format" : "time-local"
+          },
+          "numero" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "codigo" : {
+            "type" : "string"
+          },
+          "estado" : {
+            "type" : "string",
+            "enum" : [ "EN_ESPERA", "LLAMADO", "ATENDIDO", "VENCIDO", "CANCELADO" ]
+          },
+          "llamadoEn" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "atendidoEn" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        }
+      },
+      "NotaOpcionalRequest" : {
+        "type" : "object",
+        "properties" : {
+          "nota" : {
+            "type" : "string",
+            "maxLength" : 500,
+            "minLength" : 0
+          }
+        }
+      },
+      "NotificacionResponse" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "tipo" : {
+            "type" : "string"
+          },
+          "titulo" : {
+            "type" : "string"
+          },
+          "mensaje" : {
+            "type" : "string"
+          },
+          "referenciaTipo" : {
+            "type" : "string"
+          },
+          "referenciaId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "leida" : {
+            "type" : "boolean"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        }
+      },
+      "VincularFormulaRequest" : {
+        "type" : "object",
+        "properties" : {
+          "codigo" : {
+            "type" : "string",
+            "maxLength" : 40,
+            "minLength" : 0
+          }
+        },
+        "required" : [ "codigo" ]
+      },
+      "DisponibilidadSedeItem" : {
+        "type" : "object",
+        "properties" : {
+          "sedeId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "sedeCodigo" : {
+            "type" : "string"
+          },
+          "sedeNombre" : {
+            "type" : "string"
+          },
+          "nivel" : {
+            "type" : "string",
+            "enum" : [ "DISPONIBLE", "POCAS_UNIDADES", "AGOTADO" ]
+          }
+        }
+      },
+      "FormulaDetalleResponse" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "codigoExterno" : {
+            "type" : "string"
+          },
+          "estadoExterno" : {
+            "type" : "string",
+            "enum" : [ "EMITIDA", "PARCIALMENTE_DISPENSADA", "DISPENSADA", "VENCIDA", "ANULADA" ]
+          },
+          "fechaEmision" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "fechaVencimiento" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "vigente" : {
+            "type" : "boolean"
+          },
+          "observaciones" : {
+            "type" : "string"
+          },
+          "medicoNombre" : {
+            "type" : "string"
+          },
+          "sincronizadaEn" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "items" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/FormulaItemDetalleResponse"
+            }
+          }
+        }
+      },
+      "FormulaItemDetalleResponse" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "medicamentoId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "medicamentoCodigo" : {
+            "type" : "string"
+          },
+          "medicamentoNombre" : {
+            "type" : "string"
+          },
+          "principioActivo" : {
+            "type" : "string"
+          },
+          "presentacion" : {
+            "type" : "string"
+          },
+          "dosis" : {
+            "type" : "string"
+          },
+          "frecuencia" : {
+            "type" : "string"
+          },
+          "duracionDias" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "cantidadAutorizada" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "cantidadDispensada" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "cantidadReservadaActiva" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "cantidadPendiente" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "disponibilidadPorSede" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/DisponibilidadSedeItem"
+            }
+          }
+        }
+      },
+      "EntregarPedidoRequest" : {
+        "type" : "object",
+        "properties" : {
+          "documentoVerificado" : {
+            "type" : "string",
+            "maxLength" : 30,
+            "minLength" : 0
+          },
+          "nota" : {
+            "type" : "string",
+            "maxLength" : 500,
+            "minLength" : 0
+          }
+        },
+        "required" : [ "documentoVerificado" ]
+      },
+      "CancelarPedidoGestionRequest" : {
+        "type" : "object",
+        "properties" : {
+          "motivo" : {
+            "type" : "string",
+            "maxLength" : 500,
+            "minLength" : 0
+          }
+        },
+        "required" : [ "motivo" ]
+      },
+      "EntradaStockRequest" : {
+        "type" : "object",
+        "properties" : {
+          "cantidad" : {
+            "type" : "integer",
+            "format" : "int32",
+            "minimum" : 1
+          },
+          "motivo" : {
+            "type" : "string",
+            "maxLength" : 500,
+            "minLength" : 0
+          }
+        },
+        "required" : [ "cantidad" ]
+      },
+      "InventarioItemResponse" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "sedeId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "sedeCodigo" : {
+            "type" : "string"
+          },
+          "sedeNombre" : {
+            "type" : "string"
+          },
+          "medicamentoId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "medicamentoCodigo" : {
+            "type" : "string"
+          },
+          "medicamentoNombre" : {
+            "type" : "string"
+          },
+          "principioActivo" : {
+            "type" : "string"
+          },
+          "presentacion" : {
+            "type" : "string"
+          },
+          "cantidadFisica" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "cantidadReservada" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "disponible" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "stockMinimo" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "nivel" : {
+            "type" : "string",
+            "enum" : [ "DISPONIBLE", "POCAS_UNIDADES", "AGOTADO" ]
+          }
+        }
+      },
+      "AjusteStockRequest" : {
+        "type" : "object",
+        "properties" : {
+          "cantidad" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "motivo" : {
+            "type" : "string",
+            "maxLength" : 500,
+            "minLength" : 0
+          }
+        },
+        "required" : [ "cantidad", "motivo" ]
+      },
+      "RegistroPacienteRequest" : {
+        "type" : "object",
+        "properties" : {
+          "email" : {
+            "type" : "string",
+            "format" : "email",
+            "maxLength" : 255,
+            "minLength" : 0
+          },
+          "password" : {
+            "type" : "string",
+            "maxLength" : 100,
+            "minLength" : 8
+          },
+          "tipoDocumento" : {
+            "type" : "string",
+            "maxLength" : 10,
+            "minLength" : 0
+          },
+          "documento" : {
+            "type" : "string",
+            "maxLength" : 30,
+            "minLength" : 0
+          },
+          "nombres" : {
+            "type" : "string",
+            "maxLength" : 120,
+            "minLength" : 0
+          },
+          "apellidos" : {
+            "type" : "string",
+            "maxLength" : 120,
+            "minLength" : 0
+          },
+          "telefono" : {
+            "type" : "string",
+            "maxLength" : 30,
+            "minLength" : 0
+          }
+        },
+        "required" : [ "apellidos", "documento", "email", "nombres", "password", "telefono", "tipoDocumento" ]
+      },
+      "AuthResponse" : {
+        "type" : "object",
+        "properties" : {
+          "accessToken" : {
+            "type" : "string"
+          },
+          "tokenType" : {
+            "type" : "string"
+          },
+          "expiresIn" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "usuario" : {
+            "$ref" : "#/components/schemas/UsuarioResumenResponse"
+          }
+        }
+      },
+      "UsuarioResumenResponse" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "email" : {
+            "type" : "string"
+          },
+          "rol" : {
+            "type" : "string",
+            "enum" : [ "PACIENTE", "EMPLEADO", "ADMIN" ]
+          },
+          "cargo" : {
+            "type" : "string",
+            "enum" : [ "FARMACEUTICO", "AUXILIAR", "DOMICILIARIO" ]
+          },
+          "sedeId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "nombres" : {
+            "type" : "string"
+          },
+          "apellidos" : {
+            "type" : "string"
+          }
+        }
+      },
+      "LoginRequest" : {
+        "type" : "object",
+        "properties" : {
+          "email" : {
+            "type" : "string",
+            "format" : "email",
+            "minLength" : 1
+          },
+          "password" : {
+            "type" : "string",
+            "minLength" : 1
+          }
+        },
+        "required" : [ "email", "password" ]
+      },
+      "ActualizarStockMinimoRequest" : {
+        "type" : "object",
+        "properties" : {
+          "stockMinimo" : {
+            "type" : "integer",
+            "format" : "int32",
+            "minimum" : 0
+          }
+        },
+        "required" : [ "stockMinimo" ]
+      },
+      "FranjaDisponibleItem" : {
+        "type" : "object",
+        "properties" : {
+          "horaInicio" : {
+            "type" : "string",
+            "format" : "time-local"
+          },
+          "horaFin" : {
+            "type" : "string",
+            "format" : "time-local"
+          },
+          "franjaInicio" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "capacidad" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "ocupados" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "cuposDisponibles" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "disponible" : {
+            "type" : "boolean"
+          }
+        }
+      },
+      "FranjasDisponiblesResponse" : {
+        "type" : "object",
+        "properties" : {
+          "sedeId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "sedeCodigo" : {
+            "type" : "string"
+          },
+          "sedeNombre" : {
+            "type" : "string"
+          },
+          "fecha" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "duracionFranjaMin" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "capacidadFranja" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "franjas" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/FranjaDisponibleItem"
+            }
+          }
+        }
+      },
+      "PaginaResponsePedidoResumenResponse" : {
+        "type" : "object",
+        "properties" : {
+          "content" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/PedidoResumenResponse"
+            }
+          },
+          "page" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "size" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "totalElements" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
+      },
+      "PedidoResumenResponse" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "codigo" : {
+            "type" : "string"
+          },
+          "estado" : {
+            "type" : "string",
+            "enum" : [ "RESERVADO", "EN_PREPARACION", "LISTO", "EN_RUTA", "ENTREGADO", "CANCELADO", "VENCIDO" ]
+          },
+          "modalidad" : {
+            "type" : "string",
+            "enum" : [ "RECOGER", "DOMICILIO" ]
+          },
+          "esParcial" : {
+            "type" : "boolean"
+          },
+          "sedeId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "sedeCodigo" : {
+            "type" : "string"
+          },
+          "sedeNombre" : {
+            "type" : "string"
+          },
+          "formulaId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "formulaCodigo" : {
+            "type" : "string"
+          },
+          "pacienteId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "pacienteNombre" : {
+            "type" : "string"
+          },
+          "pacienteDocumento" : {
+            "type" : "string"
+          },
+          "asignadoA" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "expiraEn" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "updatedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "listoEn" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "entregadoEn" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "turno" : {
+            "$ref" : "#/components/schemas/TurnoResponse"
+          }
+        }
+      },
+      "NotificacionesListadoResponse" : {
+        "type" : "object",
+        "properties" : {
+          "content" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/NotificacionResponse"
+            }
+          },
+          "page" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "size" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "totalElements" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "noLeidas" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
+      },
+      "FormulaItemResumenResponse" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "medicamentoId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "medicamentoCodigo" : {
+            "type" : "string"
+          },
+          "medicamentoNombre" : {
+            "type" : "string"
+          },
+          "presentacion" : {
+            "type" : "string"
+          },
+          "cantidadAutorizada" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "cantidadDispensada" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "cantidadReservadaActiva" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "cantidadPendiente" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        }
+      },
+      "FormulaResumenResponse" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "codigoExterno" : {
+            "type" : "string"
+          },
+          "estadoExterno" : {
+            "type" : "string",
+            "enum" : [ "EMITIDA", "PARCIALMENTE_DISPENSADA", "DISPENSADA", "VENCIDA", "ANULADA" ]
+          },
+          "fechaEmision" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "fechaVencimiento" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "vigente" : {
+            "type" : "boolean"
+          },
+          "sincronizadaEn" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "items" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/FormulaItemResumenResponse"
+            }
+          }
+        }
+      },
+      "PantallaSalaResponse" : {
+        "type" : "object",
+        "properties" : {
+          "sedeCodigo" : {
+            "type" : "string"
+          },
+          "sedeNombre" : {
+            "type" : "string"
+          },
+          "fecha" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "llamados" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/TurnoSalaItem"
+            }
+          },
+          "enEspera" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/TurnoSalaItem"
+            }
+          }
+        }
+      },
+      "TurnoSalaItem" : {
+        "type" : "object",
+        "properties" : {
+          "codigo" : {
+            "type" : "string"
+          },
+          "franjaInicio" : {
+            "type" : "string",
+            "format" : "time-local"
+          },
+          "llamadoEn" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        }
+      },
+      "PaginaResponseInventarioItemResponse" : {
+        "type" : "object",
+        "properties" : {
+          "content" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/InventarioItemResponse"
+            }
+          },
+          "page" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "size" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "totalElements" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
+      },
+      "MovimientoKardexResponse" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "sedeId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "medicamentoId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "tipo" : {
+            "type" : "string",
+            "enum" : [ "ENTRADA", "AJUSTE_POS", "AJUSTE_NEG", "RESERVA", "LIBERACION", "DISPENSACION", "TRASLADO_SALIDA", "TRASLADO_ENTRADA" ]
+          },
+          "cantidad" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "saldoFisico" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "referenciaTipo" : {
+            "type" : "string"
+          },
+          "referenciaId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "usuarioId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "motivo" : {
+            "type" : "string"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        }
+      },
+      "PaginaResponseMovimientoKardexResponse" : {
+        "type" : "object",
+        "properties" : {
+          "content" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/MovimientoKardexResponse"
+            }
+          },
+          "page" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "size" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "totalElements" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
+      },
+      "SedePublicaResponse" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "codigo" : {
+            "type" : "string"
+          },
+          "nombre" : {
+            "type" : "string"
+          },
+          "direccion" : {
+            "type" : "string"
+          },
+          "latitud" : {
+            "type" : "number"
+          },
+          "longitud" : {
+            "type" : "number"
+          },
+          "horaApertura" : {
+            "type" : "string",
+            "format" : "time-local"
+          },
+          "horaCierre" : {
+            "type" : "string",
+            "format" : "time-local"
+          }
+        }
+      },
+      "MedicamentoPublicoResponse" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "codigo" : {
+            "type" : "string"
+          },
+          "nombre" : {
+            "type" : "string"
+          },
+          "principioActivo" : {
+            "type" : "string"
+          },
+          "presentacion" : {
+            "type" : "string"
+          }
+        }
+      },
+      "PaginaResponseMedicamentoPublicoResponse" : {
+        "type" : "object",
+        "properties" : {
+          "content" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/MedicamentoPublicoResponse"
+            }
+          },
+          "page" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "size" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "totalElements" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
+      },
+      "DisponibilidadMedicamentoResponse" : {
+        "type" : "object",
+        "properties" : {
+          "medicamentoId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "codigo" : {
+            "type" : "string"
+          },
+          "nombre" : {
+            "type" : "string"
+          },
+          "principioActivo" : {
+            "type" : "string"
+          },
+          "presentacion" : {
+            "type" : "string"
+          },
+          "sedes" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/DisponibilidadSedeResponse"
+            }
+          }
+        }
+      },
+      "DisponibilidadSedeResponse" : {
+        "type" : "object",
+        "properties" : {
+          "sedeId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "codigo" : {
+            "type" : "string"
+          },
+          "nombre" : {
+            "type" : "string"
+          },
+          "direccion" : {
+            "type" : "string"
+          },
+          "latitud" : {
+            "type" : "number"
+          },
+          "longitud" : {
+            "type" : "number"
+          },
+          "horaApertura" : {
+            "type" : "string",
+            "format" : "time-local"
+          },
+          "horaCierre" : {
+            "type" : "string",
+            "format" : "time-local"
+          },
+          "nivel" : {
+            "type" : "string",
+            "enum" : [ "DISPONIBLE", "POCAS_UNIDADES", "AGOTADO" ]
+          }
+        }
+      }
+    },
+    "securitySchemes" : {
+      "bearerAuth" : {
+        "type" : "http",
+        "name" : "bearerAuth",
+        "scheme" : "bearer",
+        "bearerFormat" : "JWT"
+      }
+    }
+  }
+}

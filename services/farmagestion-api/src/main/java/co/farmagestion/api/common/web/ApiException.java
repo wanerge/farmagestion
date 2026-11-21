@@ -72,4 +72,8 @@ public class ApiException extends RuntimeException {
 	public static ApiException unprocessable(String code, String title, String detail) {
 		return new ApiException(HttpStatus.UNPROCESSABLE_CONTENT, code, title, detail);
 	}
+
+	public static ApiException serviceUnavailable(String code, String title, String detail) {
+		return new ApiException(HttpStatus.SERVICE_UNAVAILABLE, code, title, detail);
+	}
 }

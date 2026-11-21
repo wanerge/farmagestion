@@ -12,5 +12,7 @@ interface SedeRepository extends JpaRepository<Sede, UUID> {
 
 	Optional<Sede> findByIdAndActivaTrue(UUID id);
 
+	Optional<Sede> findByCodigoIgnoreCase(String codigo);
+
 	List<Sede> findAllByIdIn(Collection<UUID> ids);
 }
